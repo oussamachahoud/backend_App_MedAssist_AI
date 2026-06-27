@@ -1,0 +1,51 @@
+# ── Python ────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# ── Virtual environments ──────────────────────────────────
+venv/
+.venv/
+env/
+ENV/
+
+# ── Environment & secrets ─────────────────────────────────
+.env.local
+.env.production
+.env.*.local
+
+# ── Logs ─────────────────────────────────────────────────
+logs/
+*.log
+
+# ── ML model artifacts (large binary files) ──────────────
+app/ml_models/*.pth
+app/ml_models/*.pkl
+app/ml_models/*.pt
+app/ml_models/*.onnx
+# Keep the placeholder
+!app/ml_models/.gitkeep
+
+# ── Testing ───────────────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+*.cover
+
+# ── IDEs ─────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ── Docker ────────────────────────────────────────────────
+.dockerignore

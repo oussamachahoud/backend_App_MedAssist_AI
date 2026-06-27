@@ -1,0 +1,5 @@
+# Place your trained model files here (not tracked by git)
+# 
+#   multimodal_model.pth   — PyTorch multimodal model weights
+#   le_diagnostic.pkl      — LabelEncoder for diagnostic classes
+#   le_region.pkl          — LabelEncoder for body region classes
