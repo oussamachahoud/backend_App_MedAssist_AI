@@ -1,7 +1,8 @@
 """
 tests/test_api.py
-Integration tests for the HTTP endpoints using FastAPI TestClient.
+Integration tests for HTTP endpoints using FastAPI TestClient.
 Uses a mock ModelService so no real .pth file is needed to run tests.
+V6.0: predict endpoint accepts 7 clinical metadata fields.
 """
 
 from unittest.mock import MagicMock, patch
@@ -20,8 +21,10 @@ _mock_service.is_loaded = True
 _mock_service.diagnostic_classes = MOCK_CLASSES
 _mock_service.region_classes = ["back", "face", "scalp"]
 _mock_service.device = "cpu"
-_mock_service.encode_sex.return_value = 1.0
-_mock_service.encode_region.return_value = 0.2
+_mock_service.build_meta_vector.return_value = (
+    __import__("numpy").zeros(7, dtype="float32"),
+    __import__("numpy").ones(7, dtype="float32"),
+)
 _mock_service.predict.return_value = (
     "NEV",    # predicted label
     0.92,     # confidence
@@ -49,10 +52,10 @@ def client():
 
 @pytest.fixture
 def sample_image(tmp_path):
-    """Create a minimal 224x224 white JPEG image for testing."""
+    """Create a minimal 256×256 white JPEG image for testing."""
     from PIL import Image
     img_path = tmp_path / "test.jpg"
-    img = Image.new("RGB", (224, 224), color=(200, 150, 130))
+    img = Image.new("RGB", (256, 256), color=(200, 150, 130))
     img.save(img_path, format="JPEG")
     return img_path
 
@@ -104,7 +107,7 @@ class TestModelInfoEndpoint:
 
     def test_model_info_image_size(self, client):
         data = client.get("/api/v1/model/info").json()
-        assert data["input_image_size"] == 224
+        assert data["input_image_size"] == 256
 
 
 # ── Predict tests ─────────────────────────────────────────────────────────────
@@ -167,6 +170,25 @@ class TestPredictEndpoint:
                 files={"file": ("test.jpg", f, "image/jpeg")},
             ).json()
         assert data["patient_id"] == "PAT-999"
+
+    def test_predict_with_all_v6_fields(self, client, sample_image):
+        """All 7 V6.0 clinical fields accepted."""
+        with open(sample_image, "rb") as f:
+            response = client.post(
+                "/api/v1/predict",
+                data={
+                    "age": "55",
+                    "sex": "female",
+                    "localization": "back",
+                    "grew": "true",
+                    "bleed": "false",
+                    "diameter_1": "1.5",
+                    "skin_cancer_history": "false",
+                    "elevation": "true",
+                },
+                files={"file": ("test.jpg", f, "image/jpeg")},
+            )
+        assert response.status_code == 200
 
     def test_response_headers_present(self, client, sample_image):
         with open(sample_image, "rb") as f:

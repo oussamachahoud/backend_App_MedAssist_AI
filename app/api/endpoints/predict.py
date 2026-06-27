@@ -1,6 +1,7 @@
 """
 app/api/endpoints/predict.py
-Main prediction endpoint — accepts image + patient metadata, returns diagnosis.
+V6.0 prediction endpoint — accepts image + 7 clinical metadata fields,
+returns skin lesion diagnosis with confidence scores and risk assessment.
 
 POST /api/v1/predict   (multipart/form-data)
 """
@@ -25,10 +26,15 @@ router = APIRouter(tags=["Prediction"])
 @router.post(
     "/predict",
     response_model=PredictResponse,
-    summary="Skin Lesion Prediction",
+    summary="Skin Lesion Prediction (V6.0)",
     description=(
-        "Upload a dermoscopy image alongside patient metadata (age, sex, localization) "
-        "to receive a diagnostic prediction with confidence scores and clinical risk assessment."
+        "Upload a dermoscopy image alongside clinical patient metadata to receive "
+        "a diagnostic prediction with confidence scores and clinical risk assessment.\n\n"
+        "**Required**: `file` (image), `age`\n\n"
+        "**Optional clinical fields** (all improve accuracy when provided):\n"
+        "`sex`, `localization`, `grew`, `bleed`, `diameter_1`, "
+        "`skin_cancer_history`, `elevation`\n\n"
+        "Missing optional fields are automatically imputed using training set medians/modes."
     ),
     responses={
         200: {"description": "Successful prediction"},
@@ -44,19 +50,40 @@ async def predict(
         UploadFile,
         File(description="Dermoscopy image (JPEG or PNG, max 10 MB)"),
     ],
-    # ── Patient metadata (form fields) ────────────────────
+    # ── Required patient metadata ─────────────────────────
     age: Annotated[
         float,
         Form(description="Patient age in years (0–120)", ge=0, le=120),
     ],
+    # ── Optional clinical fields ──────────────────────────
     sex: Annotated[
         SexLabel,
         Form(description="Patient biological sex: male | female | unknown"),
     ] = SexLabel.UNKNOWN,
     localization: Annotated[
         BodyRegion,
-        Form(description="Anatomical site of the skin lesion"),
+        Form(description="Anatomical site of the skin lesion (informational)"),
     ] = BodyRegion.UNKNOWN,
+    grew: Annotated[
+        Optional[bool],
+        Form(description="Was the lesion growing? (true/false)"),
+    ] = None,
+    bleed: Annotated[
+        Optional[bool],
+        Form(description="Does the lesion bleed? (true/false)"),
+    ] = None,
+    diameter_1: Annotated[
+        Optional[float],
+        Form(description="Largest lesion diameter in cm (0–50)", ge=0, le=50),
+    ] = None,
+    skin_cancer_history: Annotated[
+        Optional[bool],
+        Form(description="Prior personal skin cancer history? (true/false)"),
+    ] = None,
+    elevation: Annotated[
+        Optional[bool],
+        Form(description="Is the lesion elevated/raised? (true/false)"),
+    ] = None,
     patient_id: Annotated[
         Optional[str],
         Form(description="Optional patient identifier for tracking", max_length=64),
@@ -65,19 +92,20 @@ async def predict(
     svc: ModelService = Depends(get_model_service),
 ) -> PredictResponse:
     """
-    Full prediction pipeline:
-        1. Validate & preprocess the uploaded image → image tensor
-        2. Encode tabular features (age, sex, localization) → tabular tensor
-        3. Run multimodal forward pass → logits → softmax probabilities
-        4. Calculate clinical risk level based on prediction + confidence
+    Full V6.0 prediction pipeline:
+        1. Validate & preprocess uploaded image     → image tensor (1, 3, 256, 256)
+        2. Build 7-feature tabular vector           → tabular tensor (1, 7) + meta_mask
+        3. Run multimodal forward pass              → logits → threshold-adjusted prediction
+        4. Calculate clinical risk level
         5. Return structured PredictResponse
     """
     t_start = time.perf_counter()
 
     logger.info(
-        f"Prediction request | patient_id={patient_id} | "
-        f"age={age} | sex={sex} | localization={localization} | "
-        f"filename={file.filename}"
+        f"Prediction request | patient_id={patient_id} | age={age} | sex={sex.value} | "
+        f"localization={localization.value} | grew={grew} | bleed={bleed} | "
+        f"diameter_1={diameter_1} | skin_cancer_history={skin_cancer_history} | "
+        f"elevation={elevation} | filename={file.filename}"
     )
 
     # ── Step 1: Preprocess image ──────────────────────────
@@ -89,32 +117,42 @@ async def predict(
         logger.exception(f"Unexpected error during image preprocessing: {exc}")
         raise HTTPException(status_code=500, detail="Failed to process image.") from exc
 
-    # ── Step 2: Encode tabular features ───────────────────
-    sex_encoded     = svc.encode_sex(sex.value)
-    region_encoded  = svc.encode_region(localization.value)
-    tabular_tensor  = build_tabular_tensor(
-        age=age,
-        sex_encoded=sex_encoded,
-        region_encoded=region_encoded,
-    )
+    # ── Step 2: Build tabular features & meta_mask ────────
+    try:
+        features, meta_mask = svc.build_meta_vector(
+            age=age,
+            sex=sex.value,
+            grew=grew,
+            bleed=bleed,
+            diameter_1=diameter_1,
+            skin_cancer_history=skin_cancer_history,
+            elevation=elevation,
+        )
+        tabular_tensor, mask_tensor = build_tabular_tensor(features, meta_mask)
+    except Exception as exc:
+        logger.exception(f"Error building tabular features: {exc}")
+        raise HTTPException(status_code=500, detail="Failed to process metadata.") from exc
 
     logger.debug(
-        f"Tabular features: age={age} → {age/120:.3f} | "
-        f"sex={sex.value} → {sex_encoded} | "
-        f"region={localization.value} → {region_encoded}"
+        f"Meta vector: {dict(zip(['age','gender','grew','bleed','diameter_1','skin_cancer_history','elevation'], features.tolist()))} | "
+        f"mask: {meta_mask.tolist()}"
     )
 
     # ── Step 3: Model inference ───────────────────────────
     if not svc.is_loaded:
         logger.warning(f"MOCK MODE: Returning dummy prediction for patient_id={patient_id}")
         predicted_label = "MEL"
-        confidence = 0.895
-        all_probs = {"MEL": 0.895, "NV": 0.05, "BCC": 0.055}
+        confidence      = 0.895
+        all_probs       = {
+            "ACK": 0.015, "BCC": 0.030, "MEL": 0.895,
+            "NEV": 0.020, "SCC": 0.025, "SEK": 0.015,
+        }
     else:
         try:
             predicted_label, confidence, all_probs = svc.predict(
                 image_tensor=image_tensor,
                 tabular_tensor=tabular_tensor,
+                meta_mask_tensor=mask_tensor,
             )
         except RuntimeError as exc:
             logger.error(f"Inference error: {exc}")

@@ -1,11 +1,10 @@
 """
 tests/test_model_service.py
-Unit tests for risk assessment logic and preprocessing utilities.
+Unit tests for risk assessment logic and V6.0 preprocessing utilities.
 No real model weights are required.
 """
 
-import io
-
+import numpy as np
 import pytest
 import torch
 from PIL import Image
@@ -61,57 +60,62 @@ class TestRiskAssessment:
         assert risk == RiskLevel.CRITICAL
 
 
-# ── Tabular Tensor Tests ──────────────────────────────────────────────────────
+# ── V6.0 Tabular Tensor Tests ─────────────────────────────────────────────────
 
 class TestBuildTabularTensor:
+    """Tests for the V6.0 build_tabular_tensor function."""
 
-    def test_output_shape(self):
-        tensor = build_tabular_tensor(age=45.0, sex_encoded=1.0, region_encoded=0.5)
-        assert tensor.shape == (1, 3)
+    def _make_tensors(self, age=45.0, present_all=True):
+        """Helper to build dummy features and mask."""
+        features = np.array([age, 1.0, 0.0, 0.0, 1.2, 0.0, 1.0], dtype=np.float32)
+        mask     = np.ones(7, dtype=np.float32) if present_all else np.zeros(7, dtype=np.float32)
+        return build_tabular_tensor(features, mask)
+
+    def test_output_shapes(self):
+        tab, mask = self._make_tensors()
+        assert tab.shape  == (1, 7)
+        assert mask.shape == (1, 7)
 
     def test_output_dtype_float32(self):
-        tensor = build_tabular_tensor(age=30.0, sex_encoded=0.0, region_encoded=0.2)
-        assert tensor.dtype == torch.float32
+        tab, mask = self._make_tensors()
+        assert tab.dtype  == torch.float32
+        assert mask.dtype == torch.float32
 
-    def test_age_normalisation(self):
-        tensor = build_tabular_tensor(age=120.0, sex_encoded=0.0, region_encoded=0.0)
-        age_value = tensor[0, 0].item()
-        assert abs(age_value - 1.0) < 1e-5  # 120/120 = 1.0
+    def test_all_present_mask(self):
+        _, mask = self._make_tensors(present_all=True)
+        assert mask.sum().item() == 7.0
 
-    def test_zero_age(self):
-        tensor = build_tabular_tensor(age=0.0, sex_encoded=0.0, region_encoded=0.0)
-        age_value = tensor[0, 0].item()
-        assert abs(age_value - 0.0) < 1e-5
+    def test_all_missing_mask(self):
+        _, mask = self._make_tensors(present_all=False)
+        assert mask.sum().item() == 0.0
 
-    def test_values_in_range(self):
-        tensor = build_tabular_tensor(age=60.0, sex_encoded=0.5, region_encoded=0.3)
-        for val in tensor[0].tolist():
-            assert 0.0 <= val <= 1.0
+    def test_values_round_trip(self):
+        features = np.array([52.0, 0.0, 1.0, 0.0, 2.5, 1.0, 0.0], dtype=np.float32)
+        mask     = np.ones(7, dtype=np.float32)
+        tab, _   = build_tabular_tensor(features, mask)
+        np.testing.assert_allclose(tab.numpy()[0], features, rtol=1e-6)
 
 
 # ── Preprocessing Tests ───────────────────────────────────────────────────────
 
 class TestPreprocessing:
-    """Tests for image preprocessing (sync parts only)."""
+    """Tests for V6.0 image preprocessing (sync parts only)."""
 
-    def test_pil_image_to_tensor_shape(self):
-        """Verify the transform pipeline produces the right tensor shape."""
-        from app.services.preprocessing_service import _transform
-        img = Image.new("RGB", (500, 400))
-        tensor = _transform(img)
-        assert tensor.shape == (3, 224, 224)
+    def test_pil_image_correct_size(self):
+        """Verify the transform pipeline produces 256×256 tensors."""
+        from app.services.preprocessing_service import _preprocess_numpy
+        img = np.random.randint(0, 255, (256, 256, 3), dtype=np.uint8)
+        tensor = _preprocess_numpy(img)
+        assert tensor.shape == (3, 256, 256)
 
-    def test_pil_image_normalised(self):
-        """Verify tensor is float and normalised (can be negative after norm)."""
-        from app.services.preprocessing_service import _transform
-        img = Image.new("RGB", (224, 224), color=(128, 128, 128))
-        tensor = _transform(img)
+    def test_pil_image_dtype_float32(self):
+        from app.services.preprocessing_service import _preprocess_numpy
+        img    = np.random.randint(0, 255, (256, 256, 3), dtype=np.uint8)
+        tensor = _preprocess_numpy(img)
         assert tensor.dtype == torch.float32
-        # After ImageNet normalize, values can be outside [0, 1]
-        assert tensor.min() < 1.1
 
     def test_unsqueeze_adds_batch_dim(self):
-        from app.services.preprocessing_service import _transform
-        img = Image.new("RGB", (224, 224))
-        tensor = _transform(img).unsqueeze(0)
-        assert tensor.shape == (1, 3, 224, 224)
+        from app.services.preprocessing_service import _preprocess_numpy
+        img    = np.random.randint(0, 255, (256, 256, 3), dtype=np.uint8)
+        tensor = _preprocess_numpy(img).unsqueeze(0)
+        assert tensor.shape == (1, 3, 256, 256)

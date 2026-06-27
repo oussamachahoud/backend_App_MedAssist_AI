@@ -11,7 +11,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    """Central configuration for the Skin Lesion AI API."""
+    """Central configuration for the Skin Lesion AI API — V6.0."""
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -22,13 +22,20 @@ class Settings(BaseSettings):
 
     # ── Application ───────────────────────────────────────
     app_name: str = "Skin Lesion AI API"
-    api_version: str = "1.0.0"
+    api_version: str = "2.0.0"
     debug: bool = False
 
     # ── Model Paths ───────────────────────────────────────
+    # PyTorch checkpoint — trained with MedAssistModel V6.0 (swa_model_V6.0.pth)
     model_path: str = "app/ml_models/multimodal_model.pth"
-    le_diagnostic_path: str = "app/ml_models/le_diagnostic.pkl"
-    le_region_path: str = "app/ml_models/le_region.pkl"
+    # Diagnostic LabelEncoder (diagnostic_encoder.pkl from preprocessing notebook)
+    le_diagnostic_path: str = "app/ml_models/diagnostic_encoder.pkl"
+    # Imputer medians/modes for the 7 clinical metadata features
+    imputer_path: str = "app/ml_models/imputer.pkl"
+    # StandardScaler for numeric features (age, diameter_1)
+    scaler_path: str = "app/ml_models/scaler.pkl"
+    # Per-class optimised thresholds from notebook 04b (thresholds_V6.0.json)
+    thresholds_path: str = "app/ml_models/thresholds_V6.0.json"
 
     # ── Server ─────────────────────────────────────────────
     host: str = "0.0.0.0"
@@ -52,10 +59,12 @@ class Settings(BaseSettings):
     # ── Logging ────────────────────────────────────────────
     log_level: str = "INFO"
 
-    # ── Model Architecture ─────────────────────────────────
-    image_size: int = 224          # Expected input image size (square)
+    # ── Model Architecture — V6.0 ──────────────────────────
+    image_size: int = 256          # V6.0 uses 256×256 input images
     num_diagnostic_classes: int = 6
-    num_tabular_features: int = 3  # age, sex_encoded, region_encoded
+    # 7 clinical features: age, gender, grew, bleed, diameter_1,
+    #                      skin_cancer_history, elevation
+    num_tabular_features: int = 7
 
 
 @lru_cache

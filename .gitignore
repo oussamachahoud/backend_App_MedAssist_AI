@@ -29,8 +29,12 @@ app/ml_models/*.pth
 app/ml_models/*.pkl
 app/ml_models/*.pt
 app/ml_models/*.onnx
-# Keep the placeholder
+# Keep the placeholder and thresholds JSON (small config file)
 !app/ml_models/.gitkeep
+!app/ml_models/thresholds_V6.0.json
+
+# ── Notebooks — training results are tracked ──────────────
+# (notebooks/ folder is fully committed to the repo)
 
 # ── Testing ───────────────────────────────────────────────
 .pytest_cache/
