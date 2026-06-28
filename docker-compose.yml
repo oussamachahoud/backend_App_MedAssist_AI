@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   medassist-api:
     build:
@@ -8,15 +6,29 @@ services:
     container_name: medassist_api
     ports:
       - "8000:8000"
-    environment:
-      - MALLOC_ARENA_MAX=2
-      - OMP_NUM_THREADS=1
-      - MKL_NUM_THREADS=1
-    # ── Memory Limit (4GB Constraint) ─────────────────
-    # If the container exceeds 3.5GB, Docker will kill and restart it,
-    # preventing the host VPS from freezing (OOM lockup).
-    deploy:
-      resources:
-        limits:
-          memory: 3.5G
+
+    # ── Shared Memory ────────────────────────────────────────────────
+    # Docker defaults /dev/shm to 64MB. PyTorch uses shm for internal
+    # tensor ops and mmap — when it fills up → SIGBUS ("Bus error").
+    # 256MB is generous for single-worker, single-image inference.
+    shm_size: '256m'
+
+    # ── Memory Limit ─────────────────────────────────────────────────
+    # VPS: 6GB RAM / 8GB swap.
+    # mem_limit works with plain `docker-compose up` (unlike deploy.resources
+    # which only applies in Docker Swarm mode).
+    # 5g = leaves ~1GB for the host OS / sshd / Docker daemon.
+    mem_limit: 5g
+    memswap_limit: 6g     # total RAM+swap cap the container can use
+
+    # ── Restart Policy ────────────────────────────────────────────────
     restart: unless-stopped
+
+    # ── Health Check ─────────────────────────────────────────────────
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s    # give the model time to load before first check

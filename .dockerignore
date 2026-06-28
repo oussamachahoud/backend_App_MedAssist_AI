@@ -12,6 +12,7 @@ venv.bak/
 .pytest_cache/
 tests/
 notebooks/
+logs/
 
 .git/
 .gitignore

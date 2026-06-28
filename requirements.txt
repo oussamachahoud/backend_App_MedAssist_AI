@@ -8,8 +8,9 @@ pydantic-settings>=2.2.0
 python-dotenv>=1.0.0
 
 # ── ML / Deep Learning ────────────────────────────────────
-torch>=2.2.0
-torchvision>=0.17.0
+# NOTE: torch & torchvision are installed separately in the Dockerfile
+# (CPU-only wheels via --index-url). Do NOT add them here — pip would
+# pull the full CUDA build (~2 GB) from the default PyPI index.
 Pillow>=10.3.0
 scikit-learn>=1.4.0              # for label encoders (.pkl) and imputer/scaler
 timm>=0.9.0                       # pytorch-image-models (EfficientNet-B3, Swin)
