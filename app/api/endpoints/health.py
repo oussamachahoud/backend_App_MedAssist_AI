@@ -6,7 +6,7 @@ GET /api/v1/health
 """
 
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 
 from fastapi import APIRouter
 from loguru import logger
@@ -46,6 +46,6 @@ async def health_check() -> HealthResponse:
         status=status,
         model_loaded=model_service.is_loaded,
         uptime_seconds=round(uptime, 2),
-        timestamp=datetime.utcnow(),
+        timestamp=datetime.now(timezone.utc),
         version=settings.api_version,
     )

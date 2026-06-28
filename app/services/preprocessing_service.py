@@ -223,6 +223,6 @@ def build_tabular_tensor(
         tab_tensor  : torch.Tensor shape (1, 7) — float32
         mask_tensor : torch.Tensor shape (1, 7) — float32
     """
-    tab_tensor  = torch.tensor([features],  dtype=torch.float32)
-    mask_tensor = torch.tensor([meta_mask], dtype=torch.float32)
+    tab_tensor  = torch.from_numpy(np.stack([features])).float()
+    mask_tensor = torch.from_numpy(np.stack([meta_mask])).float()
     return tab_tensor, mask_tensor

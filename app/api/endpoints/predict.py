@@ -88,6 +88,16 @@ async def predict(
         Optional[str],
         Form(description="Optional patient identifier for tracking", max_length=64),
     ] = None,
+    use_tta: Annotated[
+        bool,
+        Form(
+            description=(
+                "Enable Test-Time Augmentation (TTA×8). "
+                "Averages 8 augmented views for higher accuracy — "
+                "but ~6–8× slower than standard mode. Default: false."
+            )
+        ),
+    ] = False,
     # ── Injected dependency ───────────────────────────────
     svc: ModelService = Depends(get_model_service),
 ) -> PredictResponse:
@@ -153,6 +163,7 @@ async def predict(
                 image_tensor=image_tensor,
                 tabular_tensor=tabular_tensor,
                 meta_mask_tensor=mask_tensor,
+                use_tta=use_tta,
             )
         except RuntimeError as exc:
             logger.error(f"Inference error: {exc}")

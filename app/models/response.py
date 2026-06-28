@@ -3,7 +3,7 @@ app/models/response.py
 Pydantic response models returned by the API endpoints.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Optional
 
 from pydantic import BaseModel, Field
@@ -19,7 +19,7 @@ class HealthResponse(BaseModel):
     status: str = Field(..., examples=["ok"])
     model_loaded: bool = Field(..., description="Whether the ML model is loaded and ready")
     uptime_seconds: float = Field(..., description="Seconds since the API started")
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     version: str = Field(..., examples=["1.0.0"])
 
 
@@ -119,7 +119,7 @@ class PredictResponse(BaseModel):
         description="Model inference time in milliseconds",
         examples=[34.7],
     )
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     @classmethod
     def build(
