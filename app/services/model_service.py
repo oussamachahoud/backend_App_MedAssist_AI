@@ -13,6 +13,13 @@ V6.0 preprocessing artifacts:
     - imputer.pkl             : median/mode values for missing feature imputation
     - scaler.pkl              : StandardScaler for numeric features (age, diameter_1)
     - thresholds_V6.0.json    : per-class optimal decision thresholds from 04b
+
+Inference modes:
+    - Standard (use_tta=False) : single forward pass  — fast, ~30–50 ms
+    - TTA×8    (use_tta=True)  : 8-augmentation average — more accurate, ~200–400 ms
+                                 Augmentations match notebook 05:
+                                 original, h-flip, v-flip, both-flip,
+                                 rot90, rot180, rot270, center-crop-256
 """
 
 import json
@@ -37,6 +44,47 @@ SELECTED_FEATURES = ["age", "gender", "grew", "bleed",
 NUMERIC_FEATURES  = ["age", "diameter_1"]   # indices 0, 4
 BINARY_FEATURES   = ["gender", "grew", "bleed", "skin_cancer_history", "elevation"]
 
+
+# ── TTA Helper ────────────────────────────────────────────────────────────────
+
+def _apply_tta(images: torch.Tensor) -> list:
+    """
+    Generate 8 augmented views of a batch of images.
+    Exactly matches the apply_tta() function in notebook 05_evaluation_V6.0.ipynb.
+
+    Augmentations:
+        1. Original
+        2. Horizontal flip
+        3. Vertical flip
+        4. H-flip + V-flip
+        5. Rotate 90°
+        6. Rotate 180°
+        7. Rotate 270°
+        8. Center crop 224×224 → resize back to 256×256
+
+    Args:
+        images: tensor of shape (B, 3, H, W)
+
+    Returns:
+        List of 8 tensors, each (B, 3, H, W)
+    """
+    B, C, H, W = images.shape
+    aug_list = [
+        images,                                          # 1. Original
+        torch.flip(images, dims=[3]),                    # 2. H-flip
+        torch.flip(images, dims=[2]),                    # 3. V-flip
+        torch.flip(images, dims=[2, 3]),                 # 4. H+V flip
+        torch.rot90(images, k=1, dims=[2, 3]),           # 5. Rotate 90
+        torch.rot90(images, k=2, dims=[2, 3]),           # 6. Rotate 180
+        torch.rot90(images, k=3, dims=[2, 3]),           # 7. Rotate 270
+    ]
+    # 8. Center crop 224×224 → resize to original H×W
+    crop = 224
+    start = (H - crop) // 2
+    cropped = images[:, :, start:start + crop, start:start + crop]
+    resized = F.interpolate(cropped, size=(H, W), mode="bilinear", align_corners=False)
+    aug_list.append(resized)
+    return aug_list
 
 class ModelService:
     """
@@ -65,8 +113,7 @@ class ModelService:
     def load(self) -> None:
         """
         Load PyTorch model and all preprocessing artifacts from disk.
-        Called once at app startup. Gracefully falls back to mock mode if
-        model weights are absent.
+        All 5 files are strictly required to ensure correct V6.0 behavior.
         """
         model_path      = Path(settings.model_path)
         le_diag_path    = Path(settings.le_diagnostic_path)
@@ -74,22 +121,27 @@ class ModelService:
         scaler_path     = Path(settings.scaler_path)
         thresholds_path = Path(settings.thresholds_path)
 
-        # ── Validate model checkpoint ──────────────────────────────────
-        if not model_path.exists():
-            logger.warning(
-                f"Model file not found: {model_path}. "
-                "API will start in degraded (mock) mode — predictions unavailable."
-            )
-            self._is_loaded = False
-            return
+        # ── 1. Check all files exist ───────────────────────────────────
+        required_files = {
+            "Model weights (multimodal_model.pth)": model_path,
+            "Diagnostic encoder (diagnostic_encoder.pkl)": le_diag_path,
+            "Imputer (imputer.pkl)": imputer_path,
+            "Scaler (scaler.pkl)": scaler_path,
+            "Thresholds (thresholds_V6.0.json)": thresholds_path,
+        }
+        
+        missing = [f" - {name}: {path.resolve()}" for name, path in required_files.items() if not path.exists()]
+        if missing:
+            msg = "Missing required V6.0 model artifacts:\n" + "\n".join(missing)
+            logger.critical(msg)
+            raise FileNotFoundError(msg)
 
-        # ── Load PyTorch checkpoint ────────────────────────────────────
         logger.info(f"Loading V6.0 model from: {model_path}  (device={self._device})")
         t0 = time.perf_counter()
 
+        # ── 2. Load Model Weights ──────────────────────────────────────
         try:
             from app.services.architecture import MedAssistModel
-
             self._model = MedAssistModel(
                 num_meta=settings.num_tabular_features,   # 7
                 num_classes=settings.num_diagnostic_classes,  # 6
@@ -97,74 +149,59 @@ class ModelService:
                 meta_embed_dim=64,
                 backbone_name="efficientnet_b3",
             )
-
             checkpoint = torch.load(
                 model_path, map_location=self._device, weights_only=False
             )
-            # Support both raw state_dict and checkpoint dicts
-            state_dict = (
-                checkpoint.get("model_state_dict", checkpoint)
-                if isinstance(checkpoint, dict)
-                else checkpoint
-            )
+            state_dict = checkpoint.get("model_state_dict", checkpoint) if isinstance(checkpoint, dict) else checkpoint
             self._model.load_state_dict(state_dict, strict=False)
             self._model.to(self._device)
             self._model.eval()
         except Exception as exc:
             logger.error(f"Failed to load PyTorch model: {exc}")
-            raise
+            raise RuntimeError(f"Cannot load model weights: {exc}") from exc
 
-        # ── Load Diagnostic LabelEncoder ───────────────────────────────
+        # ── 3. Load Diagnostic Encoder ─────────────────────────────────
         try:
             with open(le_diag_path, "rb") as f:
                 self._le_diagnostic = pickle.load(f)
             logger.info(f"Diagnostic encoder loaded: {list(self._le_diagnostic.classes_)}")
-        except Exception:
-            logger.warning("Diagnostic encoder not found. Auto-generating default.")
-            from sklearn.preprocessing import LabelEncoder
-            self._le_diagnostic = LabelEncoder()
-            self._le_diagnostic.fit(["ACK", "BCC", "MEL", "NEV", "SCC", "SEK"])
+        except Exception as exc:
+            logger.error(f"Failed to load diagnostic encoder: {exc}")
+            raise RuntimeError(f"Cannot load diagnostic_encoder.pkl: {exc}") from exc
 
-        # ── Load Imputer ───────────────────────────────────────────────
+        # ── 4. Load Imputer ────────────────────────────────────────────
         try:
             with open(imputer_path, "rb") as f:
                 self._imputer = pickle.load(f)
             logger.info(f"Imputer loaded: keys={list(self._imputer.keys())}")
-        except Exception:
-            logger.warning("Imputer not found. Using built-in defaults.")
-            self._imputer = {
-                "numeric_medians": {"age": 52.0, "diameter_1": 1.5},
-                "binary_modes":    {"gender": 1.0, "grew": 0.0, "bleed": 0.0,
-                                    "skin_cancer_history": 0.0, "elevation": 0.0},
-            }
+        except Exception as exc:
+            logger.error(f"Failed to load imputer: {exc}")
+            raise RuntimeError(f"Cannot load imputer.pkl: {exc}") from exc
 
-        # ── Load StandardScaler ────────────────────────────────────────
+        # ── 5. Load Scaler ─────────────────────────────────────────────
         try:
             with open(scaler_path, "rb") as f:
                 self._scaler = pickle.load(f)
             logger.info("StandardScaler loaded.")
-        except Exception:
-            logger.warning("StandardScaler not found. Numeric features will NOT be scaled.")
-            self._scaler = None
+        except Exception as exc:
+            logger.error(f"Failed to load scaler: {exc}")
+            raise RuntimeError(f"Cannot load scaler.pkl: {exc}") from exc
 
-        # ── Load Per-Class Thresholds ──────────────────────────────────
+        # ── 6. Load Thresholds ─────────────────────────────────────────
         try:
             with open(thresholds_path, "r") as f:
                 self._thresholds = json.load(f)
             logger.info(f"Thresholds loaded: {self._thresholds}")
-        except Exception:
-            logger.warning(
-                "Thresholds file not found. Defaulting to 1.0 for all classes "
-                "(equivalent to raw argmax)."
-            )
-            self._thresholds = {c: 1.0 for c in ["ACK", "BCC", "MEL", "NEV", "SCC", "SEK"]}
+        except Exception as exc:
+            logger.error(f"Failed to load thresholds: {exc}")
+            raise RuntimeError(f"Cannot load thresholds_V6.0.json: {exc}") from exc
 
         elapsed = (time.perf_counter() - t0) * 1000
         self._is_loaded = True
         self._load_time = time.time()
 
         logger.info(
-            f"✅ V6.0 Model loaded in {elapsed:.1f} ms | "
+            f"✅ V6.0 Model loaded securely in {elapsed:.1f} ms | "
             f"device={self._device} | "
             f"classes={list(self._le_diagnostic.classes_)}"
         )
@@ -274,6 +311,7 @@ class ModelService:
         image_tensor: torch.Tensor,    # shape: (1, 3, 256, 256)
         tabular_tensor: torch.Tensor,  # shape: (1, 7)
         meta_mask_tensor: Optional[torch.Tensor] = None,  # shape: (1, 7)
+        use_tta: bool = False,         # True → 8-augmentation TTA (more accurate)
     ) -> Tuple[str, float, Dict[str, float]]:
         """
         Run V6.0 forward pass with per-class threshold optimization.
@@ -282,6 +320,9 @@ class ModelService:
             image_tensor:     Preprocessed image tensor.
             tabular_tensor:   Tabular feature tensor (scaled+imputed).
             meta_mask_tensor: Binary mask tensor (1=present, 0=imputed).
+            use_tta:          If True, run TTA×8 and average probabilities
+                              (matches notebook 05 evaluation — more accurate
+                              but ~6–8× slower than single pass).
 
         Returns:
             Tuple of:
@@ -300,16 +341,25 @@ class ModelService:
 
         t0 = time.perf_counter()
 
-        # ── Forward pass ──────────────────────────────────────
-        output = self._model(img, tab, mask)
-        # MedAssistModel returns (main_logits, aux_logits, gate)
-        logits = output[0] if isinstance(output, (tuple, list)) else output
+        # ── Forward pass (single or TTA×8) ────────────────────
+        if use_tta:
+            aug_images = _apply_tta(img)
+            accum = torch.zeros(
+                (img.size(0), settings.num_diagnostic_classes), device=self._device
+            )
+            for aug_img in aug_images:
+                output  = self._model(aug_img, tab, mask)
+                logits  = output[0] if isinstance(output, (tuple, list)) else output
+                accum  += F.softmax(logits, dim=1)
+            probs = (accum / len(aug_images)).squeeze(0).cpu().numpy()  # avg of 8
+        else:
+            output = self._model(img, tab, mask)
+            logits = output[0] if isinstance(output, (tuple, list)) else output
+            probs  = F.softmax(logits, dim=1).squeeze(0).cpu().numpy()
 
         elapsed_ms = (time.perf_counter() - t0) * 1000
-        logger.debug(f"Forward pass completed in {elapsed_ms:.2f} ms")
-
-        # ── Softmax → raw probabilities ────────────────────────
-        probs = F.softmax(logits, dim=1).squeeze(0).cpu().numpy()  # (num_classes,)
+        tta_str = f"TTA×{len(aug_images) if use_tta else 1}"
+        logger.debug(f"Forward pass ({tta_str}) completed in {elapsed_ms:.2f} ms")
 
         # ── Per-class threshold optimization ───────────────────
         classes = self.diagnostic_classes

@@ -1,0 +1,9 @@
+ضع ملفات النموذج هنا (Put your model files here):
+
+1. swa_model_V6.0.pth (يجب إعادة تسميته إلى multimodal_model.pth)
+2. diagnostic_encoder.pkl
+3. imputer.pkl
+4. scaler.pkl
+5. thresholds_V6.0.json (موجود بالفعل في هذا المجلد)
+
+⚠️ النظام الآن مبرمج ليرفض العمل (سيعطي خطأ) إذا كان أي من هذه الملفات الخمسة غير موجود. تم إلغاء جميع القيم الافتراضية لضمان دقة النظام الطبية.
