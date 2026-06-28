@@ -1,47 +1,22 @@
-version: "3.9"
+version: '3.8'
 
 services:
-  api:
+  medassist-api:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: skin_lesion_api
-    image: skin-lesion-api:latest
-
-    # ── Environment ───────────────────────────────────────
-    env_file:
-      - .env
-    environment:
-      - HOST=0.0.0.0
-      - PORT=8000
-
-    # ── Ports ─────────────────────────────────────────────
+    container_name: medassist_api
     ports:
       - "8000:8000"
-
-    # ── Volumes ───────────────────────────────────────────
-    volumes:
-      # Mount model files from host (not baked into image)
-      - ./app/ml_models:/app/app/ml_models:ro
-      # Persist logs
-      - ./logs:/app/logs
-
-    # ── Health check ──────────────────────────────────────
-    healthcheck:
-      test: ["CMD", "python", "-c",
-             "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health')"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-
-    # ── Restart policy ────────────────────────────────────
-    restart: unless-stopped
-
-    # ── Resource limits ───────────────────────────────────
+    environment:
+      - MALLOC_ARENA_MAX=2
+      - OMP_NUM_THREADS=1
+      - MKL_NUM_THREADS=1
+    # ── Memory Limit (4GB Constraint) ─────────────────
+    # If the container exceeds 3.5GB, Docker will kill and restart it,
+    # preventing the host VPS from freezing (OOM lockup).
     deploy:
       resources:
         limits:
-          memory: 4G
-        reservations:
-          memory: 1G
+          memory: 3.5G
+    restart: unless-stopped

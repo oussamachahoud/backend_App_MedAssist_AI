@@ -78,6 +78,27 @@ Health: http://localhost:8000/api/v1/health
 
 ---
 
+## 🐳 Docker Deployment (4GB RAM Constraints)
+
+This project is optimized to run on small VPS instances with strict memory constraints (4GB RAM).
+The Docker setup uses a **CPU-only PyTorch build** and strict thread/worker limits to prevent OOM (Out-of-Memory) crashes.
+
+### 1. Build and Run via Docker Compose (Recommended)
+Make sure you have placed all 5 model artifacts in `app/ml_models/` before building.
+```bash
+# Build the CPU-optimized image and start the container
+docker-compose up -d --build
+```
+> The `docker-compose.yml` automatically limits memory to 3.5GB. If the container exceeds this, it restarts cleanly rather than freezing the host server.
+
+### 2. Manual Docker Build
+```bash
+docker build -t medassist-api:v6 .
+docker run -d -p 8000:8000 --name medassist-api -m 3.5g medassist-api:v6
+```
+
+---
+
 ## API Endpoints
 
 | Method | Endpoint              | Description                    |
