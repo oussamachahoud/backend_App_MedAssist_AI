@@ -12,7 +12,7 @@ torch>=2.2.0
 torchvision>=0.17.0
 Pillow>=10.3.0
 scikit-learn>=1.4.0              # for label encoders (.pkl) and imputer/scaler
-pytorch-image-models>=0.9.0      # timm (EfficientNet-B3, Swin)
+timm>=0.9.0                       # pytorch-image-models (EfficientNet-B3, Swin)
 numpy>=1.26.0
 
 # ── Image Preprocessing (V6.0) ───────────────────────────
