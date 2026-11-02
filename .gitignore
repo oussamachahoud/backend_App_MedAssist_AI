@@ -16,6 +16,7 @@ env/
 ENV/
 
 # ── Environment & secrets ─────────────────────────────────
+.env
 .env.local
 .env.production
 .env.*.local
@@ -51,13 +52,6 @@ coverage.xml
 .DS_Store
 Thumbs.db
 
-# ── Docker ────────────────────────────────────────────────
-.dockerignore
-
-# Documentation
-docs_v2/
-
-# Binaries & Local Uploads
+# ── Binaries & Local Uploads ──────────────────────────────
 cloudflared.exe
 uploads/
-

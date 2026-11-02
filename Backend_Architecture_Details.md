@@ -134,7 +134,7 @@ Performs multimodal inference.
     3.  **Input Data**:
         *   `file`: Select patient image `PAT_46_881_939.png` (shown below).
             
-            ![Dermoscopy Image - PAT_46_881_939.png](PAT_46_881_939.png)
+            ![Dermoscopy Image - PAT_46_881_939.png](dashboard/assets/images/PAT_46_881_939.png)
             
         *   `age`: `55`
         *   `sex`: `female`

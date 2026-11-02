@@ -13,12 +13,32 @@ venv.bak/
 tests/
 notebooks/
 logs/
+uploads/
 
 .git/
 .gitignore
 .github/
 
 .env
+.env.*
 .vscode/
 .idea/
 .DS_Store
+Thumbs.db
+
+# Documentation & Specifications
+docs_v2/
+*.md
+
+# Large Binaries & Local Executables
+cloudflared.exe
+*.mp4
+*.pdf
+*.zip
+*.tar.gz
+
+# ML Model Weights (Mounted via Docker Volume)
+app/ml_models/*.pth
+app/ml_models/*.pkl
+app/ml_models/*.pt
+app/ml_models/*.onnx

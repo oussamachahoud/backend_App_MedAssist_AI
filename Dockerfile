@@ -14,10 +14,11 @@ ENV MKL_NUM_THREADS=2
 
 WORKDIR /app
 
-# Install system dependencies needed for OpenCV
+# Install system dependencies needed for OpenCV and ReportLab
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libgl1 \
     libglib2.0-0 \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy only the requirements first to leverage Docker cache
@@ -50,12 +51,19 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
-# Create a non-root user for security
-RUN useradd -m appuser && chown -R appuser /app
+# Ensure storage directories exist, make entrypoint executable, and configure non-root user
+RUN mkdir -p /app/uploads /app/logs && \
+    chmod +x /app/docker-entrypoint.sh && \
+    useradd -m appuser && \
+    chown -R appuser:appuser /app
+
 USER appuser
 
 # Expose port
 EXPOSE 8000
+
+# Automated database migrations + service launch
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
 
 # Start Uvicorn. Single worker — the PyTorch model takes ~1-2GB in RAM.
 # Even with 6GB, multiple workers would duplicate the model and risk OOM.
