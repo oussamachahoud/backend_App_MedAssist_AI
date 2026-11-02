@@ -167,19 +167,14 @@ class TestGradCAMService:
 class TestPredictEndpointV2:
     """Integration tests for POST /api/v1/predict with V2 telemedicine features."""
 
-    def test_guest_prediction_returns_200_no_db_persistence(self, client: TestClient, sample_image_bytes):
+    def test_unauthenticated_prediction_fails_401(self, client: TestClient, sample_image_bytes):
         response = client.post(
             "/api/v1/predict",
             data={"age": "45", "sex": "male", "localization": "back"},
             files={"file": ("lesion.jpg", sample_image_bytes, "image/jpeg")},
         )
-        assert response.status_code == 200
-        data = response.json()
-
-        assert "predicted_label" in data
-        assert "confidence" in data
-        assert "suggest_referral" in data
-        assert data["analysis_id"] is None  # Guest mode does not persist to DB
+        assert response.status_code == 401
+        assert "authenticated" in response.json()["detail"].lower() or "credentials" in response.json()["detail"].lower()
 
     def test_authenticated_doctor_prediction_persists_to_db_and_storage(
         self,
@@ -218,20 +213,22 @@ class TestPredictEndpointV2:
         assert record.predicted_class == data["predicted_label"]
         assert record.confidence == pytest.approx(data["confidence"], abs=1e-5)
 
-    def test_predict_large_file_fails_413(self, client: TestClient):
+    def test_predict_large_file_fails_413(self, client: TestClient, doctor_token: str):
         # 11 MB payload
         large_bytes = b"0" * (11 * 1024 * 1024)
         response = client.post(
             "/api/v1/predict",
+            headers={"Authorization": f"Bearer {doctor_token}"},
             data={"age": "40"},
             files={"file": ("huge.jpg", large_bytes, "image/jpeg")},
         )
         assert response.status_code == 413
         assert "too large" in response.json()["detail"].lower()
 
-    def test_predict_empty_file_fails_400(self, client: TestClient):
+    def test_predict_empty_file_fails_400(self, client: TestClient, doctor_token: str):
         response = client.post(
             "/api/v1/predict",
+            headers={"Authorization": f"Bearer {doctor_token}"},
             data={"age": "40"},
             files={"file": ("empty.jpg", b"", "image/jpeg")},
         )

@@ -17,7 +17,7 @@ from loguru import logger
 from sqlalchemy.orm import Session
 from starlette.concurrency import run_in_threadpool
 
-from app.api.deps import get_db, get_model_service, get_optional_active_doctor
+from app.api.deps import get_db, get_model_service, get_current_active_doctor
 from app.core.config import get_settings
 from app.db_models.analysis import AnalysisRecord
 from app.db_models.patient import Patient
@@ -41,9 +41,9 @@ settings = get_settings()
     description=(
         "Upload a dermoscopy image with patient clinical metadata to receive an AI "
         "diagnostic prediction, risk level, and specialist referral recommendation.\n\n"
-        "**Authenticated Doctors**: Analysis results are persisted in PostgreSQL, "
-        "images stored in MinIO, and Grad-CAM++ heatmaps generated in the background.\n"
-        "**Guests**: Instant prediction and triage without persistent medical record storage."
+        "**Strict Clinician Access**: Restricted to verified active medical doctors. "
+        "Diagnostic analyses are persisted in PostgreSQL, raw images archived in MinIO, "
+        "and Grad-CAM++ explainability heatmaps generated automatically in the background."
     ),
     responses={
         200: {"description": "Successful diagnostic prediction"},
@@ -107,7 +107,7 @@ async def predict(
     ] = False,
     # ── Injected dependencies & background tasks ──────────
     background_tasks: BackgroundTasks = BackgroundTasks(),
-    current_user: Optional[User] = Depends(get_optional_active_doctor),
+    current_user: User = Depends(get_current_active_doctor),
     db: Session = Depends(get_db),
     svc: ModelService = Depends(get_model_service),
 ) -> PredictResponse:

@@ -1,3 +1,13 @@
+import uuid
+from app.api.deps import get_current_active_doctor
+from app.db_models.user import User, UserRole, UserStatus
+
+_mock_doctor = User(
+    id=uuid.UUID("11111111-1111-1111-1111-111111111111"),
+    email="test.doctor@medassist.dz",
+    role=UserRole.DOCTOR,
+    status=UserStatus.ACTIVE,
+)
 """
 tests/test_api.py
 Integration tests for HTTP endpoints using FastAPI TestClient.
@@ -40,14 +50,31 @@ _mock_service.predict.return_value = (
 @pytest.fixture(scope="module")
 def client():
     """
-    TestClient with mocked ModelService.
+    TestClient with mocked ModelService and verified active doctor session.
     Bypasses the lifespan model loading so tests run without .pth files.
     """
+    from app.core.database import SessionLocal
+    with SessionLocal() as db:
+        doc = db.query(User).filter(User.role == UserRole.DOCTOR, User.status == UserStatus.ACTIVE).first()
+        if not doc:
+            doc = User(
+                email="test_api_doc@medassist.dz",
+                password_hash="$2b$12$dummyhashforactiveuserdoctor2026",
+                role=UserRole.DOCTOR,
+                status=UserStatus.ACTIVE,
+            )
+            db.add(doc)
+            db.commit()
+            db.refresh(doc)
+        active_doc = doc
+
+    app.dependency_overrides[get_current_active_doctor] = lambda: active_doc
     with patch("app.api.dependencies._model_service", _mock_service):
         with patch("app.api.endpoints.health.model_service", _mock_service):
             with patch("app.api.endpoints.model_info.model_service", _mock_service):
                 with TestClient(app, raise_server_exceptions=True) as c:
                     yield c
+    app.dependency_overrides.clear()
 
 
 @pytest.fixture
