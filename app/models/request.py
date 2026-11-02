@@ -56,9 +56,9 @@ class PatientMetadata(BaseModel):
     diameter_1: Optional[float] = Field(
         default=None,
         ge=0,
-        le=50,
-        description="Largest lesion diameter in cm (0–50)",
-        examples=[1.2],
+        le=200,
+        description="Largest lesion diameter in mm (0–200)",
+        examples=[8.5],
     )
     skin_cancer_history: Optional[bool] = Field(
         default=None,
@@ -95,7 +95,7 @@ class PredictFormData(BaseModel):
     localization: BodyRegion = Field(default=BodyRegion.UNKNOWN)
     grew: Optional[bool] = Field(default=None)
     bleed: Optional[bool] = Field(default=None)
-    diameter_1: Optional[float] = Field(default=None, ge=0, le=50)
+    diameter_1: Optional[float] = Field(default=None, ge=0, le=200)
     skin_cancer_history: Optional[bool] = Field(default=None)
     elevation: Optional[bool] = Field(default=None)
     patient_id: Optional[str] = Field(default=None, max_length=64)

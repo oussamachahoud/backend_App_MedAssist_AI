@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MedAssist AI — Clinician Onboarding</title>
+  <link rel="stylesheet" href="/dashboard/assets/css/dashboard.css" />
+  <link rel="icon" type="image/jpeg" href="/dashboard/assets/images/app-icon.jpg" />
+  <style>
+    .join-page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1.5rem;
+      background: radial-gradient(circle at 50% 10%, rgba(0, 201, 167, 0.12) 0%, transparent 60%),
+                  radial-gradient(circle at 10% 90%, rgba(139, 92, 246, 0.08) 0%, transparent 50%),
+                  var(--navy-950);
+    }
+    .join-card {
+      width: 100%;
+      max-width: 680px;
+      padding: 2.5rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-lg);
+      backdrop-filter: blur(25px);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+    .stepper {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+      position: relative;
+    }
+    .stepper::before {
+      content: '';
+      position: absolute;
+      top: 18px;
+      left: 10%;
+      right: 10%;
+      height: 2px;
+      background: var(--border-glass-light);
+      z-index: 1;
+    }
+    .step-item {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .step-num {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-full);
+      background: var(--navy-800);
+      border: 1px solid var(--border-glass-light);
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.9rem;
+      transition: var(--transition);
+    }
+    .step-item.active .step-num {
+      background: var(--teal-500);
+      color: #040914;
+      border-color: var(--teal-400);
+      box-shadow: 0 0 15px var(--accent-glow);
+    }
+    .step-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+    .step-item.active .step-title {
+      color: var(--teal-300);
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    @media (max-width: 600px) {
+      .form-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body class="join-page">
+
+  <div class="join-card">
+    <div style="text-align: center; margin-bottom: 1.75rem;">
+      <img src="/dashboard/assets/images/app-icon.jpg" alt="Logo" style="width: 52px; height: 52px; border-radius: var(--radius-md); box-shadow: 0 0 15px var(--accent-glow); margin-bottom: 0.5rem;" />
+      <h2 style="font-size: 1.35rem; font-weight: 800;">Clinician Network Registration</h2>
+      <p style="font-size: 0.82rem; color: var(--text-muted);">
+        Join Algeria's AI-Powered Telemedicine & Skin Lesion Diagnostic Platform
+      </p>
+    </div>
+
+    <form id="join-form">
+      <div class="form-grid">
+        <div class="form-group" style="grid-column: span 2;">
+          <label class="form-label" for="full_name">Full Name (Dr.) *</label>
+          <input type="text" id="full_name" class="form-control" placeholder="Dr. Amina Benali" required />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="email">Institutional / Medical Email *</label>
+          <input type="email" id="email" class="form-control" placeholder="amina.benali@chu-alger.dz" required />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="password">Password *</label>
+          <input type="password" id="password" class="form-control" placeholder="Min. 8 characters" required minlength="8" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="doctor_type">Clinical Practice Role *</label>
+          <select id="doctor_type" class="form-control" required>
+            <option value="general_practitioner">General Practitioner (GP / Frontline)</option>
+            <option value="specialist_dermatologist">Specialist Dermatologist</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="license_number">Ordre des Médecins / License No. *</label>
+          <input type="text" id="license_number" class="form-control" placeholder="CNOM-16-98214" required />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="institution_name">Hospital / Clinic / Department</label>
+          <input type="text" id="institution_name" class="form-control" placeholder="CHU Mustapha Bacha" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="wilaya">Wilaya (Code) *</label>
+          <select id="wilaya" class="form-control" required>
+            <option value="">-- Select Wilaya --</option>
+          </select>
+        </div>
+
+        <div class="form-group" style="grid-column: span 2;">
+          <label class="form-label" for="phone">Direct Contact Telephone</label>
+          <input type="tel" id="phone" class="form-control" placeholder="0550 12 34 56" />
+        </div>
+      </div>
+
+      <div style="background: rgba(0, 201, 167, 0.08); border: 1px solid var(--border-glass); border-radius: var(--radius-md); padding: 0.9rem; margin: 1rem 0;">
+        <span style="font-size: 0.78rem; color: var(--text-secondary); display: block; line-height: 1.4;">
+          🔒 <b>Medical Verification Notice:</b> In compliance with healthcare data regulations, new accounts undergo administrative verification before diagnostic features are activated.
+        </span>
+      </div>
+
+      <button type="submit" id="submit-btn" class="btn btn-primary" style="width: 100%; padding: 0.85rem;">
+        Submit Verification Request
+      </button>
+
+      <div style="text-align: center; margin-top: 1.25rem;">
+        <a href="/dashboard/login.html" style="font-size: 0.82rem; color: var(--text-muted); text-decoration: none;">
+          Already have verified access? <span style="color: var(--teal-400); font-weight: 600;">Sign In</span>
+        </a>
+      </div>
+    </form>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <script src="/dashboard/assets/js/wilayas.js"></script>
+  <script src="/dashboard/assets/js/api.js"></script>
+  <script>
+    // Populate all 58 wilayas dynamically
+    populateWilayaSelect('wilaya');
+
+    document.getElementById('join-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('submit-btn');
+
+      const payload = {
+        email: document.getElementById('email').value.trim(),
+        password: document.getElementById('password').value,
+        full_name: document.getElementById('full_name').value.trim(),
+        doctor_type: document.getElementById('doctor_type').value,
+        license_number: document.getElementById('license_number').value.trim(),
+        institution_name: document.getElementById('institution_name').value.trim() || null,
+        wilaya: document.getElementById('wilaya').value,
+        phone: document.getElementById('phone').value.trim() || null,
+      };
+
+      btn.disabled = true;
+      btn.innerHTML = 'Submitting Request...';
+
+      try {
+        await window.api.registerDoctor(payload);
+        window.showToast('Registration submitted! Pending admin verification.', 'success');
+        setTimeout(() => {
+          window.location.href = '/dashboard/login.html';
+        }, 1500);
+      } catch (err) {
+        window.showToast(err.message || 'Registration failed', 'error');
+        btn.disabled = false;
+        btn.innerHTML = 'Submit Verification Request';
+      }
+    });
+  </script>
+</body>
+</html>
+

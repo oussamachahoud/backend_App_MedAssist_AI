@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MedAssist AI — Secure Portal Login</title>
+  <link rel="stylesheet" href="/dashboard/assets/css/dashboard.css" />
+  <link rel="icon" type="image/jpeg" href="/dashboard/assets/images/app-icon.jpg" />
+  <style>
+    .auth-page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      background: radial-gradient(circle at 50% 20%, rgba(0, 201, 167, 0.12) 0%, transparent 60%),
+                  radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.08) 0%, transparent 50%),
+                  var(--navy-950);
+      position: relative;
+    }
+    .auth-card {
+      width: 100%;
+      max-width: 440px;
+      padding: 2.5rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-lg);
+      backdrop-filter: blur(25px);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 30px rgba(0, 201, 167, 0.1);
+      position: relative;
+      z-index: 10;
+    }
+    .auth-brand {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .auth-logo {
+      width: 64px;
+      height: 64px;
+      border-radius: var(--radius-md);
+      box-shadow: 0 0 20px var(--accent-glow);
+      margin-bottom: 0.85rem;
+    }
+    .quick-chips {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1.25rem;
+      justify-content: center;
+    }
+    .chip {
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 0.3rem 0.65rem;
+      border-radius: var(--radius-full);
+      background: rgba(15, 36, 64, 0.7);
+      border: 1px solid var(--border-glass-light);
+      color: var(--teal-400);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .chip:hover {
+      background: rgba(0, 201, 167, 0.2);
+      border-color: var(--teal-500);
+      color: #fff;
+    }
+  </style>
+</head>
+<body class="auth-page">
+
+  <div class="auth-card">
+    <!-- Trilingual Language Toggle -->
+    <div style="display: flex; justify-content: flex-end; margin-bottom: 1rem;">
+      <div class="lang-toggle" style="background: rgba(7, 19, 36, 0.7); padding: 0.25rem; border-radius: var(--radius-full); border: 1px solid var(--border-glass-light); display: inline-flex; gap: 0.25rem;">
+        <button type="button" class="lang-btn active" id="dash-lang-en" style="border: none; background: transparent; color: var(--text-muted); font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.6rem; border-radius: var(--radius-full); cursor: pointer;">EN</button>
+        <button type="button" class="lang-btn" id="dash-lang-fr" style="border: none; background: transparent; color: var(--text-muted); font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.6rem; border-radius: var(--radius-full); cursor: pointer;">FR</button>
+        <button type="button" class="lang-btn" id="dash-lang-ar" style="border: none; background: transparent; color: var(--text-muted); font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.6rem; border-radius: var(--radius-full); cursor: pointer;">عربي</button>
+      </div>
+    </div>
+
+    <div class="auth-brand">
+      <img src="/dashboard/assets/images/app-icon.jpg" alt="MedAssist AI" class="auth-logo" />
+      <h2 style="font-size: 1.45rem; font-weight: 800; letter-spacing: -0.02em;">MedAssist AI</h2>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;" data-i18n="login_title">
+        Clinical Telemedicine & Diagnostics Portal
+      </p>
+    </div>
+
+    <form id="login-form">
+      <div class="form-group">
+        <label class="form-label" for="email" data-i18n="lbl_email">Medical Email / ID</label>
+        <input type="email" id="email" class="form-control" placeholder="doctor@hospital.dz" required />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="password" data-i18n="lbl_password">Password</label>
+        <input type="password" id="password" class="form-control" placeholder="••••••••••••" required />
+      </div>
+
+      <button type="submit" id="submit-btn" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem; padding: 0.8rem;">
+        <span data-i18n="btn_signin">Sign In to Portal</span>
+      </button>
+
+      <div class="quick-chips">
+        <span style="font-size: 0.72rem; color: var(--text-muted); align-self: center;" data-i18n="quick_demo">Quick Demo:</span>
+        <button type="button" class="chip" onclick="fillCreds('admin@medassist.dz', 'Admin@MedAssist2026!')">Admin</button>
+        <button type="button" class="chip" onclick="fillCreds('doctor.amara@medassist.dz', 'DoctorPass123!')">Doctor (GP)</button>
+        <button type="button" class="chip" onclick="fillCreds('dr.benali@chu-oran.dz', 'DoctorPass123!')">Specialist</button>
+      </div>
+
+      <div style="margin-top: 1.75rem; text-align: center; border-top: 1px solid var(--border-glass-light); padding-top: 1.25rem;">
+        <span style="font-size: 0.82rem; color: var(--text-muted);" data-i18n="lbl_practitioner_question">Practicing Clinician?</span>
+        <a href="/dashboard/join.html" style="font-size: 0.82rem; color: var(--teal-400); font-weight: 600; text-decoration: none; margin-left: 0.35rem;">
+          <span data-i18n="link_request_access">Request Practitioner Access &rarr;</span>
+        </a>
+      </div>
+
+      <div style="margin-top: 1.25rem; display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem; border-top: 1px dashed var(--border-glass-light); padding-top: 0.85rem;">
+        <a href="/dashboard/landing.html" style="color: var(--teal-400); text-decoration: none; font-weight: 500;"><span data-i18n="link_public_website">&larr; Public Website</span></a>
+        <div style="display: flex; gap: 0.85rem;">
+          <a href="#" onclick="openVideoModal(event)" style="color: var(--text-muted); text-decoration: none; cursor: pointer;">🎥 Demo Video</a>
+          <a href="/dashboard/assets/downloads/MedAssist-AI.apk" download style="color: var(--text-muted); text-decoration: none;">📱 Download APK</a>
+        </div>
+      </div>
+    </form>
+  </div>
+
+    <!-- Video Modal -->
+  <div id="video-modal" style="display: none; position: fixed; inset: 0; background: rgba(2, 6, 17, 0.88); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(8px);">
+    <div style="position: relative; max-width: 680px; width: 92%; background: var(--navy-900); border: 1px solid var(--border-glass); border-radius: var(--radius-lg); padding: 1.25rem; box-shadow: 0 25px 60px rgba(0,0,0,0.8);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem;">
+        <span style="font-size: 0.95rem; font-weight: 700; color: #fff;">MedAssist AI — Official Video Demo</span>
+        <button type="button" onclick="closeVideoModal()" style="background: none; border: none; color: #fff; font-size: 1.35rem; cursor: pointer; line-height: 1;">&times;</button>
+      </div>
+      <video id="modal-video-player" controls style="width: 100%; border-radius: var(--radius-md); max-height: 420px;" poster="/dashboard/assets/images/brand-identity.jpg">
+        <source src="/dashboard/assets/videos/demo-video.mp4" type="video/mp4" />
+        Your browser does not support the video tag.
+      </video>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <script src="/dashboard/assets/js/api.js?v=2.2"></script>
+  <script src="/dashboard/assets/js/i18n.js?v=2.3"></script>
+  <script>
+    // Verify existing session asynchronously
+    (async function checkExistingAuth() {
+      const user = window.api.getCurrentUser();
+      if (user && window.api.token) {
+        try {
+          const me = await window.api.getMe();
+          if (me) {
+            window.location.href = me.role === 'admin' ? '/dashboard/admin.html' : '/dashboard/doctor.html';
+          }
+        } catch (_) {
+          // Stale or expired session: clean up so the login form is immediately accessible
+          window.api.setTokens(null, null);
+          window.api.setCurrentUser(null);
+        }
+      }
+    })();
+
+        function openVideoModal(e) {
+      if (e) e.preventDefault();
+      const modal = document.getElementById('video-modal');
+      modal.style.display = 'flex';
+      const video = document.getElementById('modal-video-player');
+      if (video) video.play();
+    }
+
+    function closeVideoModal() {
+      const modal = document.getElementById('video-modal');
+      modal.style.display = 'none';
+      const video = document.getElementById('modal-video-player');
+      if (video) {
+        video.pause();
+        video.currentTime = 0;
+      }
+    }
+
+    function fillCreds(e, p) {
+      document.getElementById('email').value = e;
+      document.getElementById('password').value = p;
+      // Auto-submit on click for instantaneous single-click login
+      const form = document.getElementById('login-form');
+      if (form) form.requestSubmit();
+    }
+
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('submit-btn');
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+
+      btn.disabled = true;
+      btn.innerHTML = '<span style="opacity: 0.7;">Verifying Credentials...</span>';
+
+      try {
+        const res = await window.api.login(email, password);
+        window.showToast('Login successful! Redirecting...', 'success');
+        setTimeout(() => {
+          if (res.user.role === 'admin') {
+            window.location.href = '/dashboard/admin.html';
+          } else {
+            window.location.href = '/dashboard/doctor.html';
+          }
+        }, 600);
+      } catch (err) {
+        window.showToast(err.message || 'Authentication failed', 'error');
+        btn.disabled = false;
+        btn.innerHTML = '<span data-i18n="btn_signin">Sign In to Portal</span>';
+      }
+    });
+  </script>
+</body>
+</html>
+

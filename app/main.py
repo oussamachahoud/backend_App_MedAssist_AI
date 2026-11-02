@@ -5,39 +5,46 @@ FastAPI application entry point.
 Responsibilities:
     - Create the FastAPI app with metadata and lifespan
     - Load the ML model at startup via lifespan context manager
+    - Ensure MinIO storage bucket exists
     - Register all API routers under /api/v1
     - Add middleware: CORS, request-size limit, request timing
     - Global exception handlers for clean error responses
 """
 
+import os
 import time
 import uuid
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
 from loguru import logger
 
 from app.core.config import get_settings
 from app.core.logging import setup_logging
 from app.core.security import add_request_size_limit, add_security_middleware
 from app.api.endpoints import health, model_info, predict
+from app.api.v1.api import api_router
 from app.services.model_service import model_service
+from app.services.storage_service import storage_service
+from app.core.database import SessionLocal
+from app.db_models.seed import create_initial_admin
 
 settings = get_settings()
 
 
-# ── Lifespan (startup / shutdown) ─────────────────────────────────────────────
+# ── Lifespan (startup / shutdown) ────────────────────────────────────────────
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator:
     """
     Runs on application startup and shutdown.
-    Startup  → load model, setup logging
+    Startup  → setup logging, load model, verify storage
     Shutdown → any cleanup needed
     """
-    # ── Startup ───────────────────────────────────────────
+    # ── Startup ──────────────────────────────────────────────────────────────
     setup_logging(settings.log_level)
     logger.info(f"🚀 Starting {settings.app_name} v{settings.api_version}")
     logger.info(f"   Debug mode : {settings.debug}")
@@ -47,30 +54,43 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
         model_service.load()
     except Exception as exc:
         logger.error(
-            f"⚠️  Model failed to load: {exc}. "
+            f"❌ Model failed to load: {exc}. "
             "API will start in degraded mode (predictions unavailable)."
         )
+
+    # Attempt to initialize MinIO bucket (non-blocking if MinIO is not running)
+    try:
+        storage_service.ensure_bucket_exists()
+    except Exception as exc:
+        logger.warning(f"⚠️ MinIO bucket check skipped/failed on startup: {exc}")
+
+    # Seed initial admin account (non-blocking — skips if already exists)
+    try:
+        with SessionLocal() as db:
+            create_initial_admin(db)
+    except Exception as exc:
+        logger.warning(f"⚠️ Admin seed skipped/failed on startup: {exc}")
 
     logger.info(
         f"✅ API ready | model_loaded={model_service.is_loaded} | "
         f"device={model_service.device}"
     )
 
-    yield  # ← application runs here
+    yield  # 🚀 application runs here
 
-    # ── Shutdown ──────────────────────────────────────────
+    # ── Shutdown ─────────────────────────────────────────────────────────────
     logger.info("🛑 Shutting down API...")
 
 
-# ── App factory ───────────────────────────────────────────────────────────────
+# ── App factory ──────────────────────────────────────────────────────────────
 
 def create_app() -> FastAPI:
     app = FastAPI(
         title=settings.app_name,
         version=settings.api_version,
         description=(
-            "### Skin Lesion AI API\n\n"
-            "Multimodal deep learning API for skin lesion diagnosis.\n\n"
+            "### MedAssist AI API — V2.0\n\n"
+            "Multimodal telemedicine and deep learning API for skin lesion diagnosis.\n\n"
             "Supported diagnostic classes:\n"
             "- **NEV** — Nevus\n"
             "- **SEK** — Seborrheic Keratosis\n"
@@ -86,25 +106,39 @@ def create_app() -> FastAPI:
         debug=settings.debug,
     )
 
-    # ── Middleware ────────────────────────────────────────
+    # ── Middleware ───────────────────────────────────────────────────────────
     add_security_middleware(app)
     add_request_size_limit(app)
     _add_request_id_middleware(app)
     _add_timing_middleware(app)
 
-    # ── Routers ───────────────────────────────────────────
+    # ── Routers ──────────────────────────────────────────────────────────────
     PREFIX = "/api/v1"
     app.include_router(health.router,     prefix=PREFIX)
     app.include_router(model_info.router, prefix=PREFIX)
     app.include_router(predict.router,    prefix=PREFIX)
+    app.include_router(api_router,        prefix=PREFIX)
 
-    # ── Exception handlers ────────────────────────────────
+    # Mount health and predict at root for direct mobile client compatibility
+    app.include_router(health.router)
+    app.include_router(predict.router)
+
+    # ── Static Files (Web Dashboard & Local Uploads) ─────────────────────────
+    dashboard_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "dashboard")
+    if os.path.exists(dashboard_dir):
+        app.mount("/dashboard", StaticFiles(directory=dashboard_dir, html=True), name="dashboard")
+
+    uploads_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "uploads")
+    os.makedirs(uploads_dir, exist_ok=True)
+    app.mount("/uploads", StaticFiles(directory=uploads_dir), name="uploads")
+
+    # ── Exception handlers ───────────────────────────────────────────────────
     _add_exception_handlers(app)
 
     return app
 
 
-# ── Middleware helpers ─────────────────────────────────────────────────────────
+# ── Middleware helpers ───────────────────────────────────────────────────────
 
 def _add_request_id_middleware(app: FastAPI) -> None:
     """Attach a unique X-Request-ID header to every response."""
@@ -129,7 +163,7 @@ def _add_timing_middleware(app: FastAPI) -> None:
         return response
 
 
-# ── Exception handlers ────────────────────────────────────────────────────────
+# ── Exception handlers ───────────────────────────────────────────────────────
 
 def _add_exception_handlers(app: FastAPI) -> None:
 
@@ -147,24 +181,28 @@ def _add_exception_handlers(app: FastAPI) -> None:
 
     @app.exception_handler(404)
     async def not_found_handler(request: Request, exc):
+        detail = getattr(exc, "detail", None)
+        if not detail or detail == "Not Found":
+            detail = f"Endpoint '{request.url.path}' not found."
         return JSONResponse(
             status_code=404,
-            content={"detail": f"Endpoint '{request.url.path}' not found."},
+            content={"detail": detail},
         )
 
 
-# ── App instance ──────────────────────────────────────────────────────────────
+# ── App instance ─────────────────────────────────────────────────────────────
 
 app = create_app()
 
 
-# ── Root redirect ─────────────────────────────────────────────────────────────
+# ── Root redirect ────────────────────────────────────────────────────────────
 
 @app.get("/", include_in_schema=False)
 async def root():
     return {
         "message": f"Welcome to {settings.app_name} v{settings.api_version}",
         "docs": "/docs",
+        "dashboard": "/dashboard",
         "health": "/api/v1/health",
         "model_info": "/api/v1/model/info",
     }

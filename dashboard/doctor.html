@@ -1,0 +1,1845 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MedAssist AI — Clinician Telemedicine Dashboard</title>
+  <link rel="stylesheet" href="/dashboard/assets/css/dashboard.css" />
+  <link rel="icon" type="image/jpeg" href="/dashboard/assets/images/app-icon.jpg" />
+  <style>
+    .inference-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 1.5rem;
+    }
+    @media (max-width: 900px) {
+      .inference-grid { grid-template-columns: 1fr; }
+    }
+    .dropzone {
+      border: 2px dashed var(--border-glass);
+      border-radius: var(--radius-md);
+      padding: 2rem 1.5rem;
+      text-align: center;
+      background: rgba(7, 19, 36, 0.45);
+      cursor: pointer;
+      transition: var(--transition);
+      position: relative;
+    }
+    .dropzone:hover {
+      border-color: var(--teal-400);
+      background: rgba(0, 201, 167, 0.05);
+    }
+    .preview-box {
+      width: 100%;
+      height: 220px;
+      object-fit: contain;
+      border-radius: var(--radius-sm);
+      display: none;
+      background: #000;
+    }
+    .prob-bar-container {
+      margin-bottom: 0.65rem;
+    }
+    .prob-bar-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.82rem;
+      margin-bottom: 0.25rem;
+    }
+    .prob-bar-track {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .prob-bar-fill {
+      height: 100%;
+      background: var(--gradient-btn);
+      border-radius: 3px;
+      transition: width 0.5s ease;
+    }
+    .timeline-card {
+      position: relative;
+      padding-left: 2rem;
+      margin-bottom: 1.5rem;
+    }
+    .timeline-card::before {
+      content: '';
+      position: absolute;
+      left: 7px;
+      top: 0;
+      bottom: -1.5rem;
+      width: 2px;
+      background: var(--border-glass-light);
+    }
+    .timeline-dot {
+      position: absolute;
+      left: 0;
+      top: 6px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--teal-500);
+      border: 3px solid var(--navy-900);
+      box-shadow: 0 0 10px var(--teal-400);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- ── Sidebar ──────────────────────────────────────────────────────── -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <img src="/dashboard/assets/images/app-icon.jpg" alt="Logo" class="sidebar-brand-icon" />
+        <span class="sidebar-brand-text">MedAssist AI</span>
+        <span class="sidebar-badge" id="role-badge" data-i18n="role_doctor">Doctor</span>
+      </div>
+
+      <nav class="sidebar-menu">
+        <a class="sidebar-item active" data-tab="overview">
+          <span class="sidebar-item-icon">📊</span>
+          <span data-i18n="nav_overview">Overview</span>
+        </a>
+        <a class="sidebar-item" data-tab="predict">
+          <span class="sidebar-item-icon">🔬</span>
+          <span data-i18n="nav_predict">Clinical Inference</span>
+        </a>
+        <a class="sidebar-item" data-tab="analyses">
+          <span class="sidebar-item-icon">📋</span>
+          <span data-i18n="nav_history">Analyses Records</span>
+        </a>
+        <a class="sidebar-item" data-tab="patients">
+          <span class="sidebar-item-icon">👥</span>
+          <span data-i18n="nav_patients">Patients & Timelines</span>
+        </a>
+        <a class="sidebar-item" data-tab="referrals">
+          <span class="sidebar-item-icon">🔄</span>
+          <span data-i18n="nav_referrals">Telemedicine Referrals</span>
+        </a>
+        <a class="sidebar-item" data-tab="profile">
+          <span class="sidebar-item-icon">👤</span>
+          <span data-i18n="nav_profile">Practitioner Profile</span>
+        </a>
+
+        <div style="margin: 0.75rem 0.5rem; border-top: 1px solid var(--border-glass-light); padding-top: 0.75rem;">
+          <span style="font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); padding: 0 0.5rem; display: block; margin-bottom: 0.35rem;" data-i18n="nav_resources">Platform Resources</span>
+          <a href="https://youtube.com/shorts/tRxtxYG6B8c?si=AkQqDnujgsMIfaL2" target="_blank" rel="noopener noreferrer" class="sidebar-item" style="color: var(--teal-400);">
+            <span class="sidebar-item-icon">🎥</span>
+            <span data-i18n="nav_video">Video Walkthrough</span>
+          </a>
+          <a href="/dashboard/landing.html" class="sidebar-item" target="_blank">
+            <span class="sidebar-item-icon">🌐</span>
+            <span data-i18n="nav_landing">Landing Page</span>
+          </a>
+          <a href="/dashboard/assets/downloads/MedAssist-AI.apk" download class="sidebar-item">
+            <span class="sidebar-item-icon">📱</span>
+            <span data-i18n="nav_apk_download">Download Mobile APK</span>
+          </a>
+        </div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-badge" onclick="switchTab('profile')" style="cursor: pointer; transition: background 0.2s ease;" title="Click to view & edit clinician profile">
+          <div class="user-avatar" id="user-initials">DR</div>
+          <div class="user-info">
+            <span class="user-name" id="sidebar-user-name" data-i18n="doc_authenticating">Dr. Authenticating...</span>
+            <span class="user-role" id="sidebar-user-role" data-i18n="role_practitioner">Practitioner</span>
+          </div>
+        </div>
+        <button class="btn btn-sm btn-secondary" onclick="window.api.logout()" title="Sign Out" style="padding: 0.35rem 0.5rem;">
+          🚪
+        </button>
+      </div>
+    </aside>
+
+    <!-- ── Main Wrapper ─────────────────────────────────────────────────── -->
+    <div class="main-wrapper">
+      <header class="top-header">
+        <div class="header-title-box">
+          <h1 id="page-title" data-i18n="title_overview">Clinician Overview</h1>
+          <p id="page-subtitle" data-i18n="sub_overview">Multimodal Clinical Decision Support & Telemedicine</p>
+        </div>
+        <div class="header-actions" style="display: flex; align-items: center; gap: 0.75rem;">
+          <div class="lang-toggle">
+            <button type="button" class="lang-btn active" id="dash-lang-en">EN</button>
+            <button type="button" class="lang-btn" id="dash-lang-fr">FR</button>
+            <button type="button" class="lang-btn" id="dash-lang-ar">عربي</button>
+          </div>
+          <span class="badge badge-active" data-i18n="badge_online" style="padding: 0.35rem 0.75rem;">● Online</span>
+          <button class="btn btn-primary btn-sm" onclick="switchTab('predict')" data-i18n="btn_new_scan">
+            + New Lesion Scan
+          </button>
+        </div>
+      </header>
+
+      <main class="page-content">
+
+        <!-- Banner: Pending Verification Alert -->
+        <div id="pending-verification-banner" style="display: none; background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.35); border-radius: var(--radius-md); padding: 1.15rem 1.4rem; margin-bottom: 1.5rem; align-items: flex-start; gap: 1.1rem; box-shadow: 0 4px 20px rgba(245, 158, 11, 0.08);">
+          <span style="font-size: 2.2rem; line-height: 1;">⏳</span>
+          <div style="flex: 1;">
+            <h4 style="color: #f59e0b; margin: 0 0 0.35rem 0; font-size: 1.05rem; font-weight: 700;" data-i18n="pending_banner_title">Account Pending Administrative Verification</h4>
+            <p style="color: var(--text-secondary); margin: 0; font-size: 0.88rem; line-height: 1.5;" data-i18n="pending_banner_desc">
+              Your medical practitioner credentials and license are undergoing formal review by the platform administrator. Diagnostic AI, patient timelines, and telemedicine referrals will be unlocked upon approval.
+            </p>
+          </div>
+        </div>
+
+
+        <!-- ── TAB 1: OVERVIEW ──────────────────────────────────────────── -->
+        <section id="tab-overview" class="tab-pane active">
+          <div class="metrics-grid">
+            <div class="glass-card metric-card">
+              <div class="metric-icon-box metric-icon-teal">🔬</div>
+              <div class="metric-info">
+                <span class="metric-value" id="stat-total-analyses">0</span>
+                <span class="metric-label" data-i18n="doc_metric_total">Total Analyses Conducted</span>
+              </div>
+            </div>
+            <div class="glass-card metric-card">
+              <div class="metric-icon-box metric-icon-blue">✅</div>
+              <div class="metric-info">
+                <span class="metric-value" id="stat-feedback-rate">0%</span>
+                <span class="metric-label" data-i18n="doc_metric_feedback">Doctor Feedback Rate</span>
+              </div>
+            </div>
+            <div class="glass-card metric-card">
+              <div class="metric-icon-box metric-icon-amber">📤</div>
+              <div class="metric-info">
+                <span class="metric-value" id="stat-sent-referrals">0</span>
+                <span class="metric-label" data-i18n="doc_metric_sent_ref">Sent Referrals (GP)</span>
+              </div>
+            </div>
+            <div class="glass-card metric-card">
+              <div class="metric-icon-box metric-icon-purple">📥</div>
+              <div class="metric-info">
+                <span class="metric-value" id="stat-received-referrals">0</span>
+                <span class="metric-label" data-i18n="doc_metric_recv_ref">Incoming Referrals</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="charts-grid">
+            <div class="glass-card">
+              <div class="glass-card-header">
+                <span class="glass-card-title" data-i18n="doc_chart_pathology">Differential Pathologies Breakdown</span>
+              </div>
+              <div class="chart-container">
+                <canvas id="chart-diagnoses"></canvas>
+              </div>
+            </div>
+            <div class="glass-card">
+              <div class="glass-card-header">
+                <span class="glass-card-title" data-i18n="doc_chart_risk">Clinical Risk Levels</span>
+              </div>
+              <div class="chart-container">
+                <canvas id="chart-risks"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <div class="glass-card">
+            <div class="glass-card-header">
+              <span class="glass-card-title" data-i18n="doc_recent_analyses_title">Recent Clinical Analyses</span>
+              <button class="btn btn-secondary btn-sm" onclick="switchTab('analyses')" data-i18n="btn_view_all">View All &rarr;</button>
+            </div>
+            <div class="table-responsive">
+              <table class="custom-table" id="recent-analyses-table">
+                <thead>
+                  <tr>
+                    <th data-i18n="th_date">Date</th>
+                    <th data-i18n="th_patient_tag">Patient / Tag</th>
+                    <th data-i18n="th_ai_finding">AI Finding</th>
+                    <th data-i18n="th_confidence">Confidence</th>
+                    <th data-i18n="th_risk_level">Risk Level</th>
+                    <th data-i18n="th_feedback">Feedback</th>
+                    <th data-i18n="th_actions">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="recent-analyses-tbody">
+                  <tr><td colspan="7" style="text-align: center; color: var(--text-muted);" data-i18n="loading_recent_scans">Loading recent scans...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── TAB 2: CLINICAL INFERENCE (PREDICT) ──────────────────────── -->
+        <section id="tab-predict" class="tab-pane">
+          <div class="inference-grid">
+            <!-- Form Card -->
+            <div class="glass-card">
+              <div class="glass-card-header">
+                <span class="glass-card-title" data-i18n="doc_upload_title">Dermoscopy Upload & Metadata</span>
+              </div>
+
+              <form id="inference-form">
+                <!-- ⚡ Quick Authentic PAD-UFES-20 Benchmark Samples -->
+                <div style="margin-bottom: 1rem; padding: 0.75rem 0.85rem; background: rgba(0, 229, 255, 0.04); border: 1px dashed var(--teal-500); border-radius: var(--radius-sm);">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.45rem;">
+                    <span style="font-size: 0.76rem; font-weight: 700; color: var(--teal-400); text-transform: uppercase;">⚡ Quick Benchmark Lesions (Authentic PAD-UFES-20):</span>
+                    <span style="font-size: 0.7rem; color: var(--text-muted);">1-Click Clinical Preload</span>
+                  </div>
+                  <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+                    <button type="button" class="btn btn-sm btn-secondary" onclick="loadSampleLesion('BCC')" style="font-size: 0.75rem; padding: 0.25rem 0.55rem; border-color: #ef4444; color: #fca5a5;">🔬 BCC (Carcinoma)</button>
+                    <button type="button" class="btn btn-sm btn-secondary" onclick="loadSampleLesion('MEL')" style="font-size: 0.75rem; padding: 0.25rem 0.55rem; border-color: #9333ea; color: #d8b4fe;">🔬 MEL (Melanoma)</button>
+                    <button type="button" class="btn btn-sm btn-secondary" onclick="loadSampleLesion('SCC')" style="font-size: 0.75rem; padding: 0.25rem 0.55rem; border-color: #f97316; color: #fdba74;">🔬 SCC (Squamous)</button>
+                    <button type="button" class="btn btn-sm btn-secondary" onclick="loadSampleLesion('NEV')" style="font-size: 0.75rem; padding: 0.25rem 0.55rem; border-color: #10b981; color: #6ee7b7;">🔬 NEV (Nevus)</button>
+                    <button type="button" class="btn btn-sm btn-secondary" onclick="loadSampleLesion('SEK')" style="font-size: 0.75rem; padding: 0.25rem 0.55rem; border-color: #10b981; color: #6ee7b7;">🔬 SEK (Keratosis)</button>
+                    <button type="button" class="btn btn-sm btn-secondary" onclick="loadSampleLesion('ACK')" style="font-size: 0.75rem; padding: 0.25rem 0.55rem; border-color: #f59e0b; color: #fcd34d;">🔬 ACK (Actinic)</button>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" data-i18n="doc_dermoscopy_img_label">Dermoscopy Image *</label>
+                  <div class="dropzone" id="dropzone">
+                    <input type="file" id="lesion-file" accept="image/*" style="display: none;" required />
+                    <div id="dropzone-prompt">
+                      <span style="font-size: 2rem; display: block; margin-bottom: 0.5rem;">📸</span>
+                      <span style="font-weight: 600; color: #fff;" data-i18n="doc_drop_zone_text">Click or Drag Dermoscopy Image Here</span>
+                      <span style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;" data-i18n="doc_supported_formats">Supported: JPG, PNG, WEBP (&lt; 10 MB)</span>
+                    </div>
+                    <img id="image-preview" class="preview-box" alt="Preview" />
+                  </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                  <div class="form-group">
+                    <label class="form-label" for="pred-patient-id" data-i18n="lbl_patient_code">Patient Code / ID</label>
+                    <input type="text" id="pred-patient-id" class="form-control" placeholder="DZ-P-001 (Optional)" />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="pred-lesion-tag" data-i18n="lbl_lesion_tag">Lesion Anatomical Tag</label>
+                    <input type="text" id="pred-lesion-tag" class="form-control" placeholder="Back - Upper Right" />
+                  </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                  <div class="form-group">
+                    <label class="form-label" for="pred-localization" data-i18n="lbl_localization">Lesion Localization *</label>
+                    <select id="pred-localization" class="form-control" required>
+                      <option value="back" data-i18n="loc_back">Back / Trunk</option>
+                      <option value="face" data-i18n="loc_face">Face</option>
+                      <option value="foot" data-i18n="loc_foot">Foot / Lower Extremity</option>
+                      <option value="hand" data-i18n="loc_hand">Hand / Upper Extremity</option>
+                      <option value="scalp" data-i18n="loc_scalp">Scalp / Neck</option>
+                      <option value="unknown" data-i18n="loc_unknown">Unspecified</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="pred-age" data-i18n="lbl_patient_age">Patient Age</label>
+                    <input type="number" id="pred-age" class="form-control" placeholder="52" min="0" max="120" required />
+                  </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                  <div class="form-group">
+                    <label class="form-label" for="pred-sex" data-i18n="lbl_biological_sex">Biological Sex</label>
+                    <select id="pred-sex" class="form-control">
+                      <option value="male" data-i18n="sex_male">Male</option>
+                      <option value="female" data-i18n="sex_female">Female</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="pred-diameter" data-i18n="lbl_diameter">Diameter (mm)</label>
+                    <input type="number" step="0.1" id="pred-diameter" class="form-control" placeholder="6.5" />
+                  </div>
+                </div>
+
+                <!-- ABCDE Clinical Features -->
+                <div style="display: flex; flex-wrap: wrap; gap: 1.25rem; margin-bottom: 1.25rem; padding: 0.75rem; background: rgba(7, 19, 36, 0.4); border-radius: var(--radius-sm);">
+                  <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; cursor: pointer;">
+                    <input type="checkbox" id="pred-grew" /> <span data-i18n="lbl_grew">Lesion Grew Recently?</span>
+                  </label>
+                  <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; cursor: pointer;">
+                    <input type="checkbox" id="pred-bleed" /> <span data-i18n="lbl_bleed">Spontaneous Bleeding?</span>
+                  </label>
+                  <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; cursor: pointer;">
+                    <input type="checkbox" id="pred-elevation" /> <span data-i18n="lbl_elevation">Palpable Elevation?</span>
+                  </label>
+                  <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; cursor: pointer;">
+                    <input type="checkbox" id="pred-history" /> <span data-i18n="lbl_history">Prior Skin Cancer History?</span>
+                  </label>
+                </div>
+
+                <button type="submit" id="btn-run-inference" class="btn btn-primary" style="width: 100%; padding: 0.85rem;">
+                  <span data-i18n="btn_run_ai">🚀 Execute Diagnostic AI & Grad-CAM++</span>
+                </button>
+              </form>
+            </div>
+
+            <!-- Real-time Inference Results Card -->
+            <div class="glass-card" id="results-card">
+              <div class="glass-card-header">
+                <span class="glass-card-title" data-i18n="results_title">Diagnostic Finding & Saliency Map</span>
+                <span id="res-badge" class="badge badge-low" style="display: none;">LOW RISK</span>
+              </div>
+
+              <div id="results-placeholder" style="text-align: center; padding: 4rem 1rem; color: var(--text-muted);">
+                <span style="font-size: 3rem; display: block; opacity: 0.4;">🔬</span>
+                <p style="margin-top: 0.5rem; font-weight: 500;" data-i18n="results_ready">Ready for inference.</p>
+                <p style="font-size: 0.78rem;" data-i18n="results_instruction">Upload an image and press Execute to view AI diagnosis and Grad-CAM++ heatmap.</p>
+              </div>
+
+              <div id="results-content" style="display: none;">
+                <!-- Primary Prediction Header -->
+                <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 0.25rem;">
+                  <div>
+                    <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;" data-i18n="lbl_primary_pred">Primary Diagnostic Prediction</span>
+                    <h2 id="res-class" style="font-size: 1.85rem; font-weight: 800; color: #fff; margin: 0.15rem 0;">BCC</h2>
+                    <p id="res-class-full" style="color: var(--teal-300); font-size: 0.95rem; font-weight: 600; margin: 0;">Basal Cell Carcinoma</p>
+                  </div>
+                  <div style="text-align: right;">
+                    <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;" data-i18n="lbl_conf">Confidence</span>
+                    <h3 id="res-conf" style="font-size: 1.6rem; font-weight: 700; color: var(--teal-400); margin: 0.15rem 0;">53.3%</h3>
+                    <span id="res-badge" class="badge" style="display: inline-flex; font-size: 0.72rem; padding: 0.2rem 0.5rem;">HIGH RISK</span>
+                  </div>
+                </div>
+
+                <!-- Case Metadata Strip -->
+                <div id="res-metadata-strip" style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; font-size: 0.76rem; color: var(--text-secondary); background: rgba(15, 36, 64, 0.6); border: 1px solid var(--border-glass); border-radius: var(--radius-sm); padding: 0.45rem 0.75rem; margin: 0.75rem 0;">
+                  <span><b style="color: var(--text-muted);">Patient:</b> <span id="res-patient-code" style="color: #fff;">PAT_46</span></span>
+                  <span><b style="color: var(--text-muted);">Region:</b> <span id="res-site" style="color: #fff;">Anterior Neck</span></span>
+                  <span><b style="color: var(--text-muted);">Inference:</b> <span id="res-timing" style="color: var(--teal-300);">1328 ms</span></span>
+                </div>
+
+                <!-- Clinical Risk Explanation -->
+                <div id="res-explanation-box" style="background: rgba(239, 68, 68, 0.12); border-left: 3px solid #ef4444; border-radius: 4px; padding: 0.65rem 0.85rem; margin-bottom: 0.75rem; font-size: 0.82rem; color: #f1f5f9; line-height: 1.45;">
+                  <b style="display: block; margin-bottom: 0.2rem; color: #fca5a5;">Clinical Risk Assessment:</b>
+                  <span id="res-explanation-text">Basal Cell Carcinoma — most common skin cancer. Malignant but slow-growing. Dermatologist referral required.</span>
+                </div>
+
+                <!-- Specialist Referral Alert -->
+                <div id="referral-alert" style="display: none; background: rgba(239, 68, 68, 0.18); border: 1px solid rgba(239, 68, 68, 0.5); border-radius: var(--radius-sm); padding: 0.65rem 0.85rem; margin-bottom: 0.75rem;">
+                  <span style="font-size: 0.82rem; color: #fca5a5; font-weight: 600; display: block;">
+                    ⚠️ <span data-i18n="alert_specialist_referral">Specialist Referral Suggested: High clinical suspicion or inconclusive presentation.</span>
+                  </span>
+                </div>
+
+                <!-- Clinical Recommendations Checklist -->
+                <div id="res-recommendations-wrapper" style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-glass-light); border-radius: var(--radius-sm); padding: 0.65rem 0.85rem; margin-bottom: 0.85rem;">
+                  <b style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 0.35rem;">Clinical Action Plan & Recommendations:</b>
+                  <ul id="res-recommendations-list" style="margin: 0; padding-left: 1.25rem; font-size: 0.8rem; color: var(--text-secondary); line-height: 1.45;">
+                  </ul>
+                </div>
+
+                <!-- Differential Probabilities -->
+                <div style="margin-bottom: 1.25rem;">
+                  <span style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 0.5rem;">
+                    <span data-i18n="lbl_diff_probs">Differential Pathology Probabilities (Multimodal Spectrum)</span>
+                  </span>
+                  <div id="prob-bars"></div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                  <button id="btn-feedback-direct" class="btn btn-secondary btn-sm" style="flex: 1;">
+                    <span data-i18n="btn_feedback_direct">✍ Clinical Feedback</span>
+                  </button>
+                  <button id="btn-refer-direct" class="btn btn-secondary btn-sm" style="flex: 1;">
+                    <span data-i18n="btn_refer_direct">🔄 Refer to Specialist</span>
+                  </button>
+                  <button id="btn-pdf-direct" class="btn btn-primary btn-sm" style="flex: 1;">
+                    <span data-i18n="btn_pdf_direct">📄 Medical PDF</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── TAB 3: ANALYSES HISTORY ──────────────────────────────────── -->
+        <section id="tab-analyses" class="tab-pane">
+          <div class="glass-card">
+            <div class="glass-card-header" style="flex-wrap: wrap; gap: 1rem;">
+              <span class="glass-card-title" data-i18n="title_history">All Completed Analyses</span>
+              <div style="display: flex; gap: 0.75rem;">
+                <select id="filter-risk" class="form-control" style="width: auto; padding: 0.4rem 0.8rem;">
+                  <option value="" data-i18n="opt_all_risks">All Risk Levels</option>
+                  <option value="CRITICAL" data-i18n="opt_risk_critical">Critical</option>
+                  <option value="HIGH" data-i18n="opt_risk_high">High</option>
+                  <option value="MODERATE" data-i18n="opt_risk_moderate">Moderate</option>
+                  <option value="LOW" data-i18n="opt_risk_low">Low</option>
+                  <option value="INCONCLUSIVE" data-i18n="opt_risk_inconclusive">Inconclusive</option>
+                </select>
+                <select id="filter-class" class="form-control" style="width: auto; padding: 0.4rem 0.8rem;">
+                  <option value="" data-i18n="opt_all_classes">All Pathology Classes</option>
+                  <option value="MEL">MEL - Melanoma</option>
+                  <option value="BCC">BCC - Basal Cell</option>
+                  <option value="SCC">SCC - Squamous Cell</option>
+                  <option value="ACK">ACK - Actinic Keratosis</option>
+                  <option value="NEV">NEV - Nevus</option>
+                  <option value="SEK">SEK - Seborrheic</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="table-responsive">
+              <table class="custom-table">
+                <thead>
+                  <tr>
+                    <th data-i18n="th_date">Date</th>
+                    <th>Patient / Site</th>
+                    <th data-i18n="th_pathology">Pathology</th>
+                    <th data-i18n="th_confidence">Confidence</th>
+                    <th data-i18n="th_risk">Risk</th>
+                    <th data-i18n="th_feedback">Doctor Feedback</th>
+                    <th data-i18n="th_actions">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="analyses-tbody">
+                  <tr><td colspan="7" style="text-align: center; color: var(--text-muted);" data-i18n="loading_analyses">Loading analyses...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── TAB 4: PATIENTS & TIMELINES ─────────────────────────────── -->
+        <section id="tab-patients" class="tab-pane">
+          <div style="display: grid; grid-template-columns: 320px 1fr; gap: 1.5rem;">
+            <!-- Register Patient Form -->
+            <div class="glass-card">
+              <div class="glass-card-header">
+                <span class="glass-card-title" data-i18n="doc_card_new_patient">+ New Patient Profile</span>
+              </div>
+              <form id="new-patient-form">
+                <div class="form-group">
+                  <label class="form-label" for="pt-code" data-i18n="lbl_pt_code">Pseudonymous Code *</label>
+                  <input type="text" id="pt-code" class="form-control" placeholder="DZ-P-1049" required />
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="pt-year" data-i18n="lbl_birth_year">Birth Year *</label>
+                  <input type="number" id="pt-year" class="form-control" placeholder="1982" min="1900" max="2026" required />
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="pt-sex" data-i18n="lbl_biological_sex">Biological Sex *</label>
+                  <select id="pt-sex" class="form-control" required>
+                    <option value="male" data-i18n="sex_male">Male</option>
+                    <option value="female" data-i18n="sex_female">Female</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="pt-notes" data-i18n="lbl_clinical_notes">Clinical Notes</label>
+                  <textarea id="pt-notes" class="form-control" rows="3" placeholder="Family history of melanoma, fair skin..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;" data-i18n="btn_create_patient">Create Patient File</button>
+              </form>
+            </div>
+
+            <!-- Patient List & Selected Timeline -->
+            <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+              <div class="glass-card">
+                <div class="glass-card-header">
+                  <span class="glass-card-title" data-i18n="doc_registered_patients_title">Registered Patients</span>
+                  <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="search-patients" class="form-control" placeholder="Search patient code..." data-i18n-placeholder="ph_search_patient" />
+                  </div>
+                </div>
+                <div class="table-responsive">
+                  <table class="custom-table">
+                    <thead>
+                      <tr>
+                        <th data-i18n="th_patient_tag">Patient Code</th>
+                        <th data-i18n="th_birth_year">Birth Year</th>
+                        <th data-i18n="th_sex">Sex</th>
+                        <th data-i18n="th_created">Created</th>
+                        <th data-i18n="th_timeline">Timeline</th>
+                      </tr>
+                    </thead>
+                    <tbody id="patients-tbody">
+                      <tr><td colspan="5" style="text-align: center; color: var(--text-muted);" data-i18n="loading_patients">Loading patients...</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Selected Patient Timeline Card -->
+              <div class="glass-card" id="patient-timeline-box" style="display: none;">
+                <div class="glass-card-header">
+                  <span class="glass-card-title" id="timeline-title" data-i18n="timeline_evolution_title">Lesion Evolution Timeline</span>
+                  <button class="btn btn-sm btn-secondary" onclick="document.getElementById('patient-timeline-box').style.display='none'">✕ Close</button>
+                </div>
+                <div id="timeline-container" style="padding-top: 1rem;"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── TAB 5: TELEMEDICINE REFERRALS ───────────────────────────── -->
+        <section id="tab-referrals" class="tab-pane">
+          <div class="glass-card">
+            <div class="glass-card-header">
+              <span class="glass-card-title" data-i18n="doc_referrals_title">Telemedicine Case Referrals</span>
+              <div style="display: flex; gap: 0.5rem;">
+                <button class="btn btn-sm btn-primary" id="btn-tab-sent-ref" onclick="loadReferrals('sent')" data-i18n="btn_sent_ref">Sent (GP)</button>
+                <button class="btn btn-sm btn-secondary" id="btn-tab-recv-ref" onclick="loadReferrals('received')" data-i18n="btn_recv_ref">Incoming (Specialist)</button>
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table class="custom-table">
+                <thead>
+                  <tr>
+                    <th data-i18n="th_date">Date</th>
+                    <th data-i18n="th_analysis_case">Analysis Case</th>
+                    <th data-i18n="th_sender_specialist">Sender / Specialist</th>
+                    <th data-i18n="th_status">Status</th>
+                    <th data-i18n="th_referral_note">Referral Clinical Note</th>
+                    <th data-i18n="th_specialist_response">Specialist Response</th>
+                    <th data-i18n="th_action">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="referrals-tbody">
+                  <tr><td colspan="7" style="text-align: center; color: var(--text-muted);" data-i18n="loading_referrals">Loading referrals...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── TAB 6: CLINICIAN PROFILE & CREDENTIALS ────────────────────── -->
+        <section id="tab-profile" class="tab-pane">
+          <div class="glass-card" style="max-width: 680px; margin: 0 auto;">
+            <div class="glass-card-header" style="justify-content: space-between;">
+              <span class="glass-card-title" data-i18n="prof_card_title">Clinician Profile & Credentials</span>
+              <span id="prof-status-badge" class="badge badge-active">Active Clinician</span>
+            </div>
+
+            <!-- Profile Overview Header Card -->
+            <div style="background: rgba(15, 36, 64, 0.6); border: 1px solid var(--border-glass); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 1.25rem;">
+              <div class="user-avatar" id="prof-avatar-large" style="width: 58px; height: 58px; font-size: 1.4rem; background: var(--gradient-teal); color: #040914; font-weight: 800; border-radius: 50%; display: flex; align-items: center; justify-content: center;">DR</div>
+              <div style="flex: 1;">
+                <h3 id="prof-header-name" style="margin: 0; font-size: 1.15rem; color: #fff;">Dr. Authenticating...</h3>
+                <div style="display: flex; gap: 0.5rem; align-items: center; margin-top: 0.25rem; flex-wrap: wrap;">
+                  <span id="prof-type-badge" class="badge badge-active">General Practitioner</span>
+                  <span id="prof-email-display" style="font-size: 0.82rem; color: var(--teal-300);">doctor@medassist.dz</span>
+                </div>
+              </div>
+            </div>
+
+            <form id="profile-form">
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                <div class="form-group">
+                  <label class="form-label" for="prof-name" data-i18n="lbl_prof_name">Full Professional Name (Dr.)</label>
+                  <input type="text" id="prof-name" class="form-control" required />
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="prof-phone" data-i18n="lbl_prof_phone">Direct Phone</label>
+                  <input type="tel" id="prof-phone" class="form-control" placeholder="+213 555 12 34 56" />
+                </div>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                <div class="form-group">
+                  <label class="form-label" for="prof-inst" data-i18n="lbl_prof_inst">Institution / Hospital</label>
+                  <input type="text" id="prof-inst" class="form-control" placeholder="e.g. CHU Mustapha Bacha" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="prof-wilaya" data-i18n="lbl_prof_wilaya">Wilaya</label>
+                  <select id="prof-wilaya" class="form-control">
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="prof-license">Medical License Number (Ordre des Médecins)</label>
+                <input type="text" id="prof-license" class="form-control" readonly style="opacity: 0.75; background: rgba(0,0,0,0.3); cursor: not-allowed;" />
+              </div>
+
+              <!-- Security & Credentials Policy Note -->
+              <div style="background: rgba(0, 229, 255, 0.05); border: 1px solid rgba(0, 229, 255, 0.2); border-radius: var(--radius-sm); padding: 0.85rem 1rem; margin-bottom: 1.5rem; font-size: 0.82rem; color: var(--text-secondary); line-height: 1.45;">
+                <div style="display: flex; gap: 0.6rem; align-items: flex-start;">
+                  <span style="font-size: 1.2rem; color: var(--teal-400);">🔒</span>
+                  <div>
+                    <strong style="color: #fff; display: block; margin-bottom: 0.2rem;">Account & Credential Security:</strong>
+                    <span>In accordance with Algerian Ministry of Health guidelines, practitioner login passwords and role authorizations are centrally verified. Contact your regional administrator to reset passwords or update clinical specializations.</span>
+                  </div>
+                </div>
+              </div>
+
+              <button type="submit" class="btn btn-primary" style="width: 100%;" data-i18n="btn_save_profile">Save Profile Changes</button>
+            </form>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- ── MODAL: GRAD-CAM++ SLIDER COMPARISON ───────────────────────────── -->
+  <div class="modal-overlay" id="modal-gradcam">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 style="font-size: 1.15rem; font-weight: 700;" data-i18n="modal_gradcam_title">Grad-CAM++ Explainability Inspection</h3>
+        <button class="modal-close" onclick="closeModal('modal-gradcam')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="gradcam-viewer">
+          <div class="image-compare-box">
+            <img id="modal-img-orig" src="" alt="Original Dermoscopy" />
+            <img id="modal-img-grad" class="gradcam-overlay" src="" alt="Grad-CAM++ Saliency" />
+          </div>
+          <div class="compare-controls">
+            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted);">
+              <span data-i18n="modal_gradcam_orig">Original Skin</span>
+              <span data-i18n="modal_gradcam_heat">Grad-CAM++ Attention</span>
+            </div>
+            <input type="range" id="gradcam-slider" min="0" max="100" value="50" style="width: 100%; accent-color: var(--teal-500);" />
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('modal-gradcam')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MODAL: CLINICAL FEEDBACK & BIOPSY ──────────────────────────────── -->
+  <div class="modal-overlay" id="modal-feedback">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 style="font-size: 1.15rem; font-weight: 700;" data-i18n="modal_fb_title">Record Clinician Feedback & Biopsy</h3>
+        <button class="modal-close" onclick="closeModal('modal-feedback')">&times;</button>
+      </div>
+      <form id="feedback-form">
+        <div class="modal-body">
+          <input type="hidden" id="feedback-analysis-id" />
+          <div class="form-group">
+            <label class="form-label" data-i18n="lbl_fb_concordance">Doctor Concordance *</label>
+            <select id="fb-confirmed" class="form-control" required>
+              <option value="true" data-i18n="opt_fb_confirmed">Confirmed AI Diagnosis</option>
+              <option value="false" data-i18n="opt_fb_rejected">Rejected / Overridden Diagnosis</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" data-i18n="lbl_fb_diag">Attending Doctor Clinical Diagnosis</label>
+            <input type="text" id="fb-diagnosis" class="form-control" placeholder="E.g., Dysplastic Nevus / Melanoma in situ" />
+          </div>
+          <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.88rem; cursor: pointer;">
+              <input type="checkbox" id="fb-biopsy-performed" /> <span data-i18n="lbl_fb_biopsy_check">Biopsy / Histopathology Performed?</span>
+            </label>
+          </div>
+          <div class="form-group">
+            <label class="form-label" data-i18n="lbl_fb_outcome">Histopathology / Biopsy Outcome</label>
+            <input type="text" id="fb-biopsy-result" class="form-control" placeholder="Breslow thickness 0.8mm, free margins..." />
+          </div>
+          <div class="form-group">
+            <label class="form-label" data-i18n="lbl_fb_followup">Next Scheduled Follow-up Date</label>
+            <input type="date" id="fb-followup-date" class="form-control" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-feedback')" data-i18n="btn_cancel">Cancel</button>
+          <button type="submit" class="btn btn-primary" data-i18n="btn_save_fb">Save Clinical Feedback</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ── MODAL: CREATE REFERRAL ────────────────────────────────────────── -->
+  <div class="modal-overlay" id="modal-referral">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 style="font-size: 1.15rem; font-weight: 700;" data-i18n="modal_ref_title">Telemedicine Specialist Referral</h3>
+        <button class="modal-close" onclick="closeModal('modal-referral')">&times;</button>
+      </div>
+      <form id="create-referral-form">
+        <div class="modal-body">
+          <input type="hidden" id="ref-analysis-id" />
+          <div class="form-group">
+            <label class="form-label" data-i18n="lbl_ref_specialist">Consulting Specialist Dermatologist</label>
+            <select id="ref-specialist-select" class="form-control">
+              <option value="" data-i18n="opt_ref_unassigned">-- General Unassigned Specialist Queue --</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" data-i18n="lbl_ref_note">Clinical Referral Note *</label>
+            <textarea id="ref-note" class="form-control" rows="4" placeholder="Pigmented lesion on back showing irregular pigmentation and asymmetry. Rapid evolution reported by patient..." required minlength="5"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-referral')" data-i18n="btn_cancel">Cancel</button>
+          <button type="submit" class="btn btn-primary" data-i18n="btn_dispatch_ref">Dispatch Referral</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+    <!-- Modal: Respond to Referral -->
+  <div class="modal-overlay" id="modal-respond-referral">
+    <div class="modal-card" style="max-width: 540px;">
+      <div class="modal-header">
+        <span class="modal-title" data-i18n="modal_resp_title">Specialist Referral Response & Management</span>
+        <button class="modal-close" onclick="closeModal('modal-respond-referral')">&times;</button>
+      </div>
+      <form id="respond-referral-form">
+        <input type="hidden" id="resp-ref-id" />
+        <div class="form-group">
+          <label class="form-label" for="resp-status" data-i18n="lbl_resp_status">Referral Case Status</label>
+          <select id="resp-status" class="form-control" required>
+            <option value="completed" data-i18n="opt_resp_completed">COMPLETED — Second Opinion Provided</option>
+            <option value="accepted" data-i18n="opt_resp_review">ACCEPTED — Under Specialist Review</option>
+            <option value="cancelled" data-i18n="opt_resp_declined">CANCELLED — Case Outside Scope</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="resp-notes" data-i18n="lbl_resp_notes">Specialist Clinical Opinion & Recommendation *</label>
+          <textarea id="resp-notes" class="form-control" rows="5" placeholder="e.g. Reviewed dermoscopic pattern and Grad-CAM++ saliency. Recommend urgent 2mm excisional biopsy with histopathology..." required minlength="5"></textarea>
+        </div>
+        <div style="display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.25rem;">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-respond-referral')" data-i18n="btn_cancel">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-ref-resp" data-i18n="btn_submit_resp">Submit Response</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Video Demo -->
+  <div class="modal-overlay" id="modal-video-demo">
+    <div class="modal-card" style="max-width: 720px;">
+      <div class="modal-header">
+        <span class="modal-title" data-i18n="modal_video_title">MedAssist AI — Official Video Demo</span>
+        <button class="modal-close" onclick="closeDemoVideoModal()">&times;</button>
+      </div>
+      <video id="doctor-video-player" controls style="width: 100%; border-radius: var(--radius-md); max-height: 440px;" poster="/dashboard/assets/images/brand-identity.jpg">
+        <source src="/dashboard/assets/videos/demo-video.mp4" type="video/mp4" />
+        Your browser does not support video.
+      </video>
+    </div>
+  </div>
+
+  <!-- Modal: Mandatory Password Change -->
+  <div class="modal-overlay" id="modal-must-change-password" style="display: none; z-index: 99999; backdrop-filter: blur(8px);">
+    <div class="modal-card" style="max-width: 480px; border-color: rgba(239, 68, 68, 0.45); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), 0 0 30px rgba(239, 68, 68, 0.2);">
+      <div class="modal-header" style="border-bottom: 1px solid rgba(239, 68, 68, 0.25);">
+        <span class="modal-title" style="color: #f87171; display: flex; align-items: center; gap: 0.5rem;" data-i18n="modal_pwd_title">
+          🔒 Mandatory Security Password Update
+        </span>
+      </div>
+      <p style="color: var(--text-secondary); font-size: 0.88rem; margin: 1rem 0 1.25rem 0; line-height: 1.5;" data-i18n="modal_pwd_desc">
+        A temporary password was assigned to your account. For clinical data privacy and regulatory compliance, please establish a permanent private password before accessing diagnostic features.
+      </p>
+      <form id="must-change-pwd-form">
+        <div class="form-group">
+          <label class="form-label" for="pwd-current" data-i18n="lbl_current_pwd">Current Temporary Password *</label>
+          <input type="password" id="pwd-current" class="form-control" placeholder="••••••••" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="pwd-new" data-i18n="lbl_new_pwd">New Secure Password * (Min 8 chars)</label>
+          <input type="password" id="pwd-new" class="form-control" placeholder="••••••••" required minlength="8" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="pwd-confirm" data-i18n="lbl_confirm_pwd">Confirm New Password *</label>
+          <input type="password" id="pwd-confirm" class="form-control" placeholder="••••••••" required minlength="8" />
+        </div>
+        <div style="margin-top: 1.5rem;">
+          <button type="submit" class="btn btn-primary" id="btn-submit-pwd" style="width: 100%; padding: 0.85rem; font-weight: 600;" data-i18n="btn_update_pwd">
+            Update Password & Activate Account
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <!-- Scripts -->
+  <script src="/dashboard/assets/js/wilayas.js"></script>
+  <script src="/dashboard/assets/vendor/chart.min.js"></script>
+  <script src="/dashboard/assets/js/api.js?v=2.2"></script>
+  <script src="/dashboard/assets/js/charts.js?v=2.2"></script>
+  <script src="/dashboard/assets/js/i18n.js?v=2.3"></script>
+    <script>
+    // ── Authentic PAD-UFES-20 Benchmark Samples ──
+    window.PAD_SAMPLES = {
+      MEL: { filename: 'MEL_PAT_680_1289_182.png', patient_id: 'DZ-16-P0101 (PAT_680)', lesion_tag: 'Upper Back Asymmetric Macule', age: 68, sex: 'male', localization: 'back', diameter: 12.0, grew: true, bleed: true, elevation: true },
+      BCC: { filename: 'BCC_PAT_82_125_525.png', patient_id: 'DZ-31-P0046 (PAT_82)', lesion_tag: 'Anterior Neck Pearly Nodule', age: 72, sex: 'male', localization: 'scalp', diameter: 8.5, grew: true, bleed: true, elevation: true },
+      SCC: { filename: 'SCC_PAT_380_1540_959.png', patient_id: 'DZ-25-P0210 (PAT_380)', lesion_tag: 'Lower Lip Keratotic Plaque', age: 65, sex: 'male', localization: 'face', diameter: 14.0, grew: true, bleed: true, elevation: true },
+      NEV: { filename: 'NEV_PAT_897_1704_988.png', patient_id: 'DZ-16-P0015 (PAT_897)', lesion_tag: 'Shoulder Symmetric Macule', age: 28, sex: 'female', localization: 'back', diameter: 4.0, grew: false, bleed: false, elevation: false },
+      SEK: { filename: 'SEK_PAT_1549_1882_230.png', patient_id: 'DZ-06-P0089 (PAT_1549)', lesion_tag: 'Mid-Back Verrucous Plaque', age: 61, sex: 'female', localization: 'back', diameter: 9.0, grew: false, bleed: false, elevation: true },
+      ACK: { filename: 'ACK_PAT_306_1646_903.png', patient_id: 'DZ-19-P0312 (PAT_306)', lesion_tag: 'Dorsal Hand Erythematous Plaque', age: 74, sex: 'male', localization: 'hand', diameter: 5.5, grew: false, bleed: false, elevation: false }
+    };
+
+    async function loadSampleLesion(cls) {
+      const sample = window.PAD_SAMPLES[cls];
+      if (!sample) return;
+
+      document.getElementById('pred-patient-id').value = sample.patient_id;
+      document.getElementById('pred-lesion-tag').value = sample.lesion_tag;
+      document.getElementById('pred-localization').value = sample.localization;
+      document.getElementById('pred-age').value = sample.age;
+      document.getElementById('pred-sex').value = sample.sex;
+      document.getElementById('pred-diameter').value = sample.diameter;
+      document.getElementById('pred-grew').checked = sample.grew;
+      document.getElementById('pred-bleed').checked = sample.bleed;
+      document.getElementById('pred-elevation').checked = sample.elevation;
+
+      const sampleUrl = `/dashboard/assets/images/samples/${sample.filename}`;
+      const imgPrev = document.getElementById('image-preview');
+      const dropPrompt = document.getElementById('dropzone-prompt');
+      const lesionInput = document.getElementById('lesion-file');
+
+      if (imgPrev) {
+        imgPrev.src = sampleUrl;
+        imgPrev.style.display = 'block';
+      }
+      if (dropPrompt) dropPrompt.style.display = 'none';
+
+      try {
+        const res = await fetch(sampleUrl);
+        const blob = await res.blob();
+        const file = new File([blob], sample.filename, { type: 'image/png' });
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        if (lesionInput) lesionInput.files = dt.files;
+        window.showToast(`Loaded authentic PAD-UFES-20 sample: ${cls}`, 'info');
+      } catch (err) {
+        console.error('Error preloading sample file:', err);
+      }
+    }
+
+    // ── Global Auth Check & Resilient Auto-Login ──
+    let currentUser = null;
+
+    async function ensureDoctorAuth() {
+      currentUser = window.api.getCurrentUser();
+      // Instant Synchronous Role Guard (Zero-latency redirection)
+      if (currentUser && currentUser.role === 'admin') {
+        window.location.href = '/dashboard/admin.html';
+        return null;
+      }
+      if (currentUser && currentUser.role && currentUser.role !== 'doctor') {
+        window.location.href = '/dashboard/login.html';
+        return null;
+      }
+
+      let valid = false;
+      if (currentUser && window.api.token) {
+        try {
+          const me = await window.api.getMe();
+          if (me) {
+            if (me.role === 'admin') {
+              window.location.href = '/dashboard/admin.html';
+              return null;
+            }
+            if (me.role !== 'doctor') {
+              window.location.href = '/dashboard/login.html';
+              return null;
+            }
+            currentUser = me;
+            window.api.setCurrentUser(me);
+            valid = true;
+          }
+        } catch (_) {
+          valid = false;
+        }
+      }
+
+      if (!valid) {
+        window.location.href = '/dashboard/login.html';
+        return null;
+      }
+      return currentUser;
+    }
+
+    function setupUserDetails(user) {
+      if (!user) return;
+      const prof = user.profile || {};
+      const displayName = prof.full_name || user.full_name || (user.email ? user.email.split('@')[0] : 'Clinician');
+      const elName = document.getElementById('sidebar-user-name');
+      const elInit = document.getElementById('user-initials');
+      if (elName) {
+        elName.innerText = displayName;
+        elName.removeAttribute('data-i18n');
+      }
+      if (elInit) elInit.innerText = displayName.slice(0, 2).toUpperCase();
+
+      const isSpec = prof.doctor_type === 'specialist_dermatologist';
+      const roleStr = isSpec ? 'Dermatologist' : 'General Practitioner';
+      const elRole = document.getElementById('sidebar-user-role');
+      const elBadge = document.getElementById('role-badge');
+      if (elRole) elRole.innerText = roleStr;
+      if (elBadge) elBadge.innerText = roleStr;
+
+      const navProfItem = document.querySelector('a.sidebar-item[data-tab="profile"] span[data-i18n]');
+      if (navProfItem) {
+        navProfItem.innerText = isSpec ? 'Specialist Profile' : 'Practitioner Profile';
+      }
+
+      // Hide Incoming (Specialist) referral button for GPs
+      const btnRecv = document.getElementById('btn-tab-recv-ref');
+      if (btnRecv) {
+        btnRecv.style.display = isSpec ? 'inline-flex' : 'none';
+      }
+
+      if (user.role === 'admin') {
+        const adminLink = document.getElementById('admin-portal-link');
+        if (adminLink) adminLink.style.display = 'inline-flex';
+      }
+    }
+
+    let currentAnalysis = null;
+    let allAnalysesCache = [];
+
+    // ── Tab Management & Smooth SPA History Navigation ──
+    window.currentTabName = 'overview';
+
+    function updateActiveTabHeaderTitle() {
+      const tabName = window.currentTabName || 'overview';
+      const lang = localStorage.getItem('medassist_lang') || 'en';
+
+      const titles = {
+        overview: {
+          en: ['Clinician Overview', 'Multimodal Clinical Decision Support & Telemedicine'],
+          fr: ["Vue d'ensemble clinique", 'Support à la décision clinique multimodale & télémédecine'],
+          ar: ['نظرة عامة سريرية', 'دعم القرار السريري متعدد الوسائط والطب الاتصالي']
+        },
+        predict: {
+          en: ['Clinical Inference', 'Multimodal Deep Learning & Explainability'],
+          fr: ['Inférence clinique', 'Apprentissage profond multimodal & explicabilité Grad-CAM++'],
+          ar: ['الاستدلال السريري للآفات', 'التعلم العميق متعدد الوسائط وتفسير Grad-CAM++']
+        },
+        analyses: {
+          en: ['Analyses Records', 'Comprehensive Patient Scan History & Feedback'],
+          fr: ['Historique des analyses', 'Dossiers complets de scans & retours diagnostiques'],
+          ar: ['سجل الفحوصات والتحاليل', 'أرشيف الحالات السريرية وتقارير التدقيق']
+        },
+        patients: {
+          en: ['Patients & Timelines', 'Pseudonymous Medical Profiles & Lesion Tracking'],
+          fr: ['Patients & Chronologies', 'Profils médicaux pseudonymisés & suivi longitudinal'],
+          ar: ['دليل المرضى والتتبع الزمني', 'الملفات الطبية بأسماء مستعارة وتتبع تطور الآفات']
+        },
+        referrals: {
+          en: ['Telemedicine Referrals', 'Frontline GP to Specialist Diagnostic Consultation'],
+          fr: ['Télé-expertise & Référencements', 'Consultation de second avis du médecin généraliste au spécialiste'],
+          ar: ['إحالات واستشارات الطب الاتصالي', 'إحالات أطباء الممارسة العامة إلى أخصائيي الجلد']
+        },
+        profile: {
+          en: ['Practitioner Profile', 'Professional Credentials & Clinical Settings'],
+          fr: ['Profil du praticien', 'Titres professionnels & paramètres cliniques'],
+          ar: ['الملف المهني للطبيب', 'بيانات الاعتماد المهني والإعدادات السريرية']
+        },
+      };
+
+      if (titles[tabName]) {
+        const item = titles[tabName][lang] || titles[tabName].en;
+        const titleEl = document.getElementById('page-title');
+        const subEl = document.getElementById('page-subtitle');
+        if (titleEl) titleEl.innerText = item[0];
+        if (subEl) subEl.innerText = item[1];
+      }
+    }
+    window.updateActiveTabHeaderTitle = updateActiveTabHeaderTitle;
+
+    function switchTab(tabName, updateHash = true) {
+      if (!tabName) tabName = 'overview';
+      window.currentTabName = tabName;
+
+      document.querySelectorAll('.sidebar-item').forEach(el => {
+        el.classList.toggle('active', el.getAttribute('data-tab') === tabName);
+      });
+      document.querySelectorAll('.tab-pane').forEach(el => {
+        el.classList.toggle('active', el.id === 'tab-' + tabName);
+      });
+
+      if (updateHash && window.location.hash !== ('#' + tabName)) {
+        history.pushState({ tab: tabName }, '', '#' + tabName);
+      }
+
+      updateActiveTabHeaderTitle();
+
+      if (tabName === 'overview') loadOverview();
+      if (tabName === 'analyses') loadAnalyses();
+      if (tabName === 'patients') loadPatients();
+      if (tabName === 'referrals') {
+        const isSpec = currentUser && currentUser.profile && currentUser.profile.doctor_type === 'specialist_dermatologist';
+        loadReferrals(isSpec ? 'received' : 'sent');
+      }
+      if (tabName === 'profile') loadProfile();
+    }
+
+    document.querySelectorAll('.sidebar-item[data-tab]').forEach(item => {
+      const tab = item.getAttribute('data-tab');
+      if (tab) {
+        item.addEventListener('click', (e) => {
+          e.preventDefault();
+          switchTab(tab, true);
+        });
+      }
+    });
+
+    window.addEventListener('popstate', () => {
+      const hash = window.location.hash.replace('#', '') || 'overview';
+      switchTab(hash, false);
+    });
+
+    // ── Modals Helper ──
+    function openModal(id) { 
+      const el = document.getElementById(id);
+      if (el) el.classList.add('active'); 
+    }
+    function closeModal(id) { 
+      const el = document.getElementById(id);
+      if (el) el.classList.remove('active'); 
+    }
+
+    // ── File Dropzone ──
+    const dropzone = document.getElementById('dropzone');
+    const lesionInput = document.getElementById('lesion-file');
+    const imagePreview = document.getElementById('image-preview');
+    const dropzonePrompt = document.getElementById('dropzone-prompt');
+
+    if (dropzone && lesionInput) {
+      dropzone.addEventListener('click', () => lesionInput.click());
+      dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.style.borderColor = 'var(--teal-400)'; });
+      dropzone.addEventListener('dragleave', () => { dropzone.style.borderColor = 'var(--border-glass)'; });
+      dropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropzone.style.borderColor = 'var(--border-glass)';
+        if (e.dataTransfer.files.length) {
+          lesionInput.files = e.dataTransfer.files;
+          handleFileSelect();
+        }
+      });
+      lesionInput.addEventListener('change', handleFileSelect);
+    }
+
+    function handleFileSelect() {
+      const file = lesionInput ? lesionInput.files[0] : null;
+      if (file && imagePreview && dropzonePrompt) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          imagePreview.src = e.target.result;
+          imagePreview.style.display = 'block';
+          dropzonePrompt.style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    // ── Tab 1: Overview Loader ──
+    async function loadOverview() {
+      try {
+        const stats = await window.api.getDoctorStats();
+        const elTotal = document.getElementById('stat-total-analyses');
+        const elFb = document.getElementById('stat-feedback-rate');
+        const elSent = document.getElementById('stat-sent-referrals');
+        const elRecv = document.getElementById('stat-received-referrals');
+
+        if (elTotal) elTotal.innerText = stats.total_analyses;
+        if (elFb) elFb.innerText = `${stats.feedback_rate_percentage}%`;
+        if (elSent) elSent.innerText = stats.sent_referrals_count;
+        if (elRecv) elRecv.innerText = stats.received_referrals_count;
+
+        if (window.charts) {
+          window.charts.renderDiagnosisDonut('chart-diagnoses', stats.diagnoses_distribution || {});
+          window.charts.renderRiskBarChart('chart-risks', stats.risk_distribution || {});
+        }
+
+        // Load recent 5 analyses
+        const res = await window.api.listAnalyses({ page: 1, page_size: 5 });
+        const tbody = document.getElementById('recent-analyses-tbody');
+        if (tbody) {
+          if (!res.items || !res.items.length) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-muted);">No analyses recorded yet. Execute a scan to begin.</td></tr>';
+            return;
+          }
+
+          tbody.innerHTML = res.items.map(a => `
+            <tr>
+              <td>${new Date(a.created_at).toLocaleDateString()}</td>
+              <td><b>${window.escapeHtml(a.lesion_tag || 'Unspecified')}</b></td>
+              <td><b>${window.escapeHtml(a.predicted_class)}</b></td>
+              <td>${(a.confidence * 100).toFixed(1)}%</td>
+              <td><span class="badge badge-${a.risk_level.toLowerCase()}">${window.t("risk_" + a.risk_level.toLowerCase(), a.risk_level)}</span></td>
+              <td>${a.doctor_confirmed === true ? window.t('status_confirmed', '✓ Confirmed') : (a.doctor_confirmed === false ? window.t('status_overridden', '✗ Overridden') : window.t('status_pending_fb', '⏱ Pending'))}</td>
+              <td>
+                <button class="btn btn-sm btn-secondary" onclick="openGradCamModal('${a.image_url}', '${a.gradcam_url}')" data-i18n="btn_gradcam">${window.t('btn_gradcam', 'Grad-CAM')}</button>
+                <button class="btn btn-sm btn-primary" onclick="downloadPdf('${a.id}')" data-i18n="btn_pdf">${window.t('btn_pdf', 'PDF')}</button>
+              </td>
+            </tr>
+          `).join('');
+        }
+      } catch (err) {
+        console.error('Error loading overview:', err);
+      }
+    }
+
+    // ── Tab 2: Execute Predict ──
+    const inferenceForm = document.getElementById('inference-form');
+    if (inferenceForm) {
+      inferenceForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('btn-run-inference');
+        const file = lesionInput ? lesionInput.files[0] : null;
+        if (!file) {
+          window.showToast('Please select a dermoscopy lesion image first.', 'error');
+          return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = 'Analyzing Lesion (Multimodal AI)...';
+
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('localization', document.getElementById('pred-localization').value);
+        formData.append('sex', document.getElementById('pred-sex').value);
+
+        const age = document.getElementById('pred-age').value;
+        if (age) formData.append('age', age);
+
+        const patientId = document.getElementById('pred-patient-id').value.trim();
+        if (patientId) formData.append('patient_id', patientId);
+
+        const lesionTag = document.getElementById('pred-lesion-tag').value.trim();
+        if (lesionTag) formData.append('lesion_tag', lesionTag);
+
+        const diameter = document.getElementById('pred-diameter').value;
+        if (diameter) formData.append('diameter_1', diameter);
+
+        formData.append('grew', document.getElementById('pred-grew').checked);
+        formData.append('bleed', document.getElementById('pred-bleed').checked);
+        formData.append('elevation', document.getElementById('pred-elevation').checked);
+        const histEl = document.getElementById('pred-history');
+        if (histEl) formData.append('skin_cancer_history', histEl.checked);
+
+        try {
+          const data = await window.api.predictLesion(formData);
+          currentAnalysis = data;
+
+          document.getElementById('results-placeholder').style.display = 'none';
+          document.getElementById('results-content').style.display = 'block';
+
+          // 1. Primary Diagnosis
+          document.getElementById('res-class').innerText = data.predicted_label || 'UNK';
+          const elFullName = document.getElementById('res-class-full');
+          if (elFullName) elFullName.innerText = data.predicted_label_full || data.predicted_label || '';
+          document.getElementById('res-conf').innerText = `${((data.confidence || 0) * 100).toFixed(1)}%`;
+
+          // 2. Risk Level & Badge
+          const riskLevel = (data.risk_level || (data.risk_assessment && data.risk_assessment.risk_level) || 'INCONCLUSIVE').toUpperCase();
+          const riskColor = data.risk_color || (riskLevel === 'CRITICAL' ? '#9333ea' : (riskLevel === 'HIGH' ? '#ef4444' : (riskLevel === 'MODERATE' ? '#f59e0b' : '#10b981')));
+          const badge = document.getElementById('res-badge');
+          if (badge) {
+            badge.style.display = 'inline-flex';
+            badge.className = `badge badge-${riskLevel.toLowerCase()}`;
+            badge.innerText = `${riskLevel} RISK`;
+            if (data.risk_color) badge.style.backgroundColor = data.risk_color;
+          }
+
+          // 3. Metadata Strip
+          const elPat = document.getElementById('res-patient-code');
+          if (elPat) elPat.innerText = data.patient_id || document.getElementById('pred-patient-id').value.trim() || 'Anonymous';
+          const elSite = document.getElementById('res-site');
+          if (elSite) elSite.innerText = data.predicted_region || document.getElementById('pred-localization').value || 'Unspecified';
+          const elTiming = document.getElementById('res-timing');
+          if (elTiming) elTiming.innerText = data.inference_time_ms ? `${Math.round(data.inference_time_ms)} ms` : 'Active';
+
+          // 4. Clinical Explanation Box
+          const explBox = document.getElementById('res-explanation-box');
+          const explText = document.getElementById('res-explanation-text');
+          if (explBox && explText) {
+            explText.innerText = data.risk_explanation || `Clinical evaluation indicates ${riskLevel} risk presentation.`;
+            explBox.style.borderLeftColor = riskColor;
+          }
+
+          // 5. Clinical Recommendations List
+          const recWrapper = document.getElementById('res-recommendations-wrapper');
+          const recList = document.getElementById('res-recommendations-list');
+          if (recWrapper && recList) {
+            const recs = data.recommendations || [];
+            if (recs.length) {
+              recList.innerHTML = recs.map(r => `<li>${r}</li>`).join('');
+              recWrapper.style.display = 'block';
+            } else {
+              recWrapper.style.display = 'none';
+            }
+          }
+
+          // 6. Referral Alert & Button Permissions
+          const refAlert = document.getElementById('referral-alert');
+          const shouldSuggestRef = data.suggest_referral || ['HIGH', 'CRITICAL', 'INCONCLUSIVE'].includes(riskLevel);
+          if (refAlert) refAlert.style.display = shouldSuggestRef ? 'block' : 'none';
+
+          const isSpec = currentUser && currentUser.profile && currentUser.profile.doctor_type === 'specialist_dermatologist';
+          const btnRef = document.getElementById('btn-refer-direct');
+          if (btnRef) {
+            btnRef.style.display = isSpec ? 'none' : 'inline-flex';
+            if (shouldSuggestRef) {
+              btnRef.className = 'btn btn-primary btn-sm';
+            } else {
+              btnRef.className = 'btn btn-secondary btn-sm';
+            }
+          }
+
+          // 7. Differential Probabilities
+          const probsBox = document.getElementById('prob-bars');
+          if (probsBox) {
+            let probItems = [];
+            if (Array.isArray(data.all_probabilities)) {
+              probItems = data.all_probabilities.map(item => ({
+                label: item.label,
+                full_name: item.full_name || item.label,
+                prob: item.probability
+              }));
+            } else if (typeof data.all_probabilities === 'object') {
+              probItems = Object.entries(data.all_probabilities).map(([cls, prob]) => ({
+                label: cls,
+                full_name: cls,
+                prob: prob
+              }));
+            }
+            probItems.sort((a, b) => b.prob - a.prob);
+
+            probsBox.innerHTML = probItems.map(item => `
+              <div class="prob-bar-container">
+                <div class="prob-bar-header">
+                  <span><b>${item.label}</b> <small style="color: var(--text-muted);">(${item.full_name})</small></span>
+                  <span><b>${(item.prob * 100).toFixed(1)}%</b></span>
+                </div>
+                <div class="prob-bar-track">
+                  <div class="prob-bar-fill" style="width: ${item.prob * 100}%;"></div>
+                </div>
+              </div>
+            `).join('');
+          }
+
+          window.showToast('Clinical inference completed successfully!', 'success');
+        } catch (err) {
+          window.showToast(err.message || 'Inference failed', 'error');
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = '⚡ Execute Diagnostic AI & Grad-CAM++';
+        }
+      });
+    }
+
+    // ── Direct Actions from Inference Result ──
+    const btnFbDirect = document.getElementById('btn-feedback-direct');
+    if (btnFbDirect) {
+      btnFbDirect.addEventListener('click', () => {
+        if (!currentAnalysis || !currentAnalysis.analysis_id) return;
+        openFeedbackModal(currentAnalysis.analysis_id);
+      });
+    }
+
+    const btnRefDirect = document.getElementById('btn-refer-direct');
+    if (btnRefDirect) {
+      btnRefDirect.addEventListener('click', () => {
+        if (!currentAnalysis || !currentAnalysis.analysis_id) return;
+        openReferralModal(currentAnalysis.analysis_id);
+      });
+    }
+
+    const btnPdfDirect = document.getElementById('btn-pdf-direct');
+    if (btnPdfDirect) {
+      btnPdfDirect.addEventListener('click', () => {
+        if (!currentAnalysis || !currentAnalysis.analysis_id) return;
+        downloadPdf(currentAnalysis.analysis_id);
+      });
+    }
+
+    // ── Tab 3: Analyses History ──
+    async function loadAnalyses() {
+      const elRisk = document.getElementById('filter-risk');
+      const elClass = document.getElementById('filter-class');
+      const risk = elRisk ? elRisk.value : '';
+      const pred = elClass ? elClass.value : '';
+
+      const params = { page: 1, page_size: 50 };
+      if (risk) params.risk_level = risk;
+      if (pred) params.predicted_class = pred;
+
+      try {
+        const res = await window.api.listAnalyses(params);
+        allAnalysesCache = res.items || [];
+        const tbody = document.getElementById('analyses-tbody');
+        if (!tbody) return;
+
+        if (!allAnalysesCache.length) {
+          tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-muted);">No analyses matching filter criteria.</td></tr>';
+          return;
+        }
+
+        const isSpecialist = currentUser && currentUser.profile && currentUser.profile.doctor_type === 'specialist_dermatologist';
+
+        tbody.innerHTML = allAnalysesCache.map(a => {
+          const isHighOrCritical = ['HIGH', 'CRITICAL', 'INCONCLUSIVE'].includes(a.risk_level);
+          const showRefer = !isSpecialist && isHighOrCritical;
+
+          return `
+          <tr>
+            <td>${new Date(a.created_at).toLocaleDateString()}</td>
+            <td><b>${window.escapeHtml(a.lesion_tag || 'Unspecified')}</b></td>
+            <td><b>${window.escapeHtml(a.predicted_class)}</b></td>
+            <td>${(a.confidence * 100).toFixed(1)}%</td>
+            <td><span class="badge badge-${a.risk_level.toLowerCase()}">${window.t("risk_" + a.risk_level.toLowerCase(), a.risk_level)}</span></td>
+            <td>${a.doctor_confirmed === true ? window.t('status_confirmed', '✓ Confirmed') : (a.doctor_confirmed === false ? window.t('status_overridden', '✗ Overridden') : window.t('status_pending_fb', '⏱ Pending'))}</td>
+            <td>
+              <button class="btn btn-sm btn-secondary" onclick="openGradCamModal('${a.image_url}', '${a.gradcam_url}')" data-i18n="btn_gradcam">${window.t('btn_gradcam', 'Grad-CAM')}</button>
+              <button class="btn btn-sm btn-secondary" onclick="openFeedbackModal('${a.id}')" data-i18n="btn_feedback">${window.t('btn_feedback', 'Feedback')}</button>
+              ${showRefer ? `<button class="btn btn-sm btn-secondary" onclick="openReferralModal('${a.id}')" data-i18n="btn_refer" style="border-color: #ef4444; color: #fca5a5;">${window.t('btn_refer', 'Refer')}</button>` : ''}
+              <button class="btn btn-sm btn-primary" onclick="downloadPdf('${a.id}')" data-i18n="btn_pdf">${window.t('btn_pdf', 'PDF')}</button>
+            </td>
+          </tr>
+        `}).join('');
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    const filterRisk = document.getElementById('filter-risk');
+    if (filterRisk) filterRisk.addEventListener('change', loadAnalyses);
+    const filterClass = document.getElementById('filter-class');
+    if (filterClass) filterClass.addEventListener('change', loadAnalyses);
+
+    // ── Tab 4: Patients & Timelines ──
+    async function loadPatients() {
+      const searchInput = document.getElementById('search-patients');
+      const search = searchInput ? searchInput.value.trim() : '';
+      const params = { page: 1, page_size: 50 };
+      if (search) params.search = search;
+
+      try {
+        const res = await window.api.listPatients(params);
+        const tbody = document.getElementById('patients-tbody');
+        if (!tbody) return;
+
+        if (!res.items || !res.items.length) {
+          tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">No patients found.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = res.items.map(p => `
+          <tr>
+            <td><b>${window.escapeHtml(p.patient_code)}</b></td>
+            <td>${window.escapeHtml(p.birth_year)}</td>
+            <td>${window.escapeHtml(p.sex)}</td>
+            <td>${new Date(p.created_at).toLocaleDateString()}</td>
+            <td>
+              <button class="btn btn-sm btn-secondary" onclick="viewTimeline('${p.id}', '${p.patient_code}')">
+                📊 View Timeline
+              </button>
+            </td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    const searchPatients = document.getElementById('search-patients');
+    if (searchPatients) {
+      searchPatients.addEventListener('input', () => {
+        clearTimeout(window._ptSearchDebounce);
+        window._ptSearchDebounce = setTimeout(loadPatients, 300);
+      });
+    }
+
+    const newPatientForm = document.getElementById('new-patient-form');
+    if (newPatientForm) {
+      newPatientForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const payload = {
+          patient_code: document.getElementById('pt-code').value.trim(),
+          birth_year: parseInt(document.getElementById('pt-year').value),
+          sex: document.getElementById('pt-sex').value,
+          notes: document.getElementById('pt-notes').value.trim() || null,
+        };
+
+        try {
+          await window.api.createPatient(payload);
+          window.showToast('Patient record created successfully!', 'success');
+          newPatientForm.reset();
+          loadPatients();
+        } catch (err) {
+          window.showToast(err.message, 'error');
+        }
+      });
+    }
+
+    async function viewTimeline(patientId, code) {
+      try {
+        const res = await window.api.getPatient(patientId);
+        const box = document.getElementById('patient-timeline-box');
+        document.getElementById('timeline-title').innerText = `Timeline: Patient ${code}`;
+        const container = document.getElementById('timeline-container');
+
+        if (!res.timeline || !res.timeline.length) {
+          container.innerHTML = '<p style="color: var(--text-muted);">No lesion analyses recorded for this patient yet.</p>';
+        } else {
+          container.innerHTML = res.timeline.map(t => `
+            <div class="timeline-card">
+              <div class="timeline-dot"></div>
+              <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                <span style="font-weight: 700; color: #fff;">${window.escapeHtml(t.lesion_tag || 'Lesion Scan')}</span>
+                <span style="font-size: 0.8rem; color: var(--text-muted);">${new Date(t.created_at).toLocaleDateString()}</span>
+              </div>
+              <div style="margin-top: 0.4rem; display: flex; gap: 0.5rem; align-items: center;">
+                <b>${t.predicted_class}</b> (${(t.confidence * 100).toFixed(1)}%)
+                <span class="badge badge-${t.risk_level.toLowerCase()}">${t.risk_level}</span>
+              </div>
+            </div>
+          `).join('');
+        }
+        box.style.display = 'block';
+        box.scrollIntoView({ behavior: 'smooth' });
+      } catch (err) {
+        window.showToast(err.message, 'error');
+      }
+    }
+
+    // ── Tab 5: Referrals ──
+    let currentRefType = 'sent';
+    async function loadReferrals(type = 'sent') {
+      currentRefType = type;
+      const btnSent = document.getElementById('btn-tab-sent-ref');
+      const btnRecv = document.getElementById('btn-tab-recv-ref');
+      if (btnSent) btnSent.className = type === 'sent' ? 'btn btn-sm btn-primary' : 'btn btn-sm btn-secondary';
+      if (btnRecv) btnRecv.className = type === 'received' ? 'btn btn-sm btn-primary' : 'btn btn-sm btn-secondary';
+
+      try {
+        const res = type === 'sent' ? await window.api.listSentReferrals() : await window.api.listReceivedReferrals();
+        const tbody = document.getElementById('referrals-tbody');
+        if (!tbody) return;
+
+        if (!res.items || !res.items.length) {
+          tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted);" data-i18n="no_referrals_type">${window.t('no_referrals_type', 'No referrals found.')}</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = res.items.map(r => `
+          <tr>
+            <td>${new Date(r.created_at).toLocaleDateString()}</td>
+            <td><b>${window.escapeHtml(r.analysis ? r.analysis.predicted_class : 'Case')}</b></td>
+            <td>${window.escapeHtml(type === 'sent' ? (r.specialist_name || 'Unassigned Specialist') : (r.referring_doctor_name || 'Referring GP'))}</td>
+            <td><span class="badge badge-${r.status === 'completed' ? 'active' : 'pending'}">${window.escapeHtml(r.status)}</span></td>
+            <td><span style="font-size: 0.82rem;">${window.escapeHtml(r.referral_note || 'None')}</span></td>
+            <td><span style="font-size: 0.82rem; color: var(--teal-300);">${window.escapeHtml(r.specialist_response || 'Pending evaluation')}</span></td>
+            <td>
+              ${type === 'received' && r.status !== 'completed' ? `
+                <button class="btn btn-sm btn-primary" onclick="openRespondReferralModal('${r.id}')">Respond</button>
+              ` : `
+                <button class="btn btn-sm btn-secondary" onclick="downloadPdf('${r.analysis_id}')">PDF</button>
+              `}
+            </td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    // ── Tab 6: Profile ──
+    async function loadProfile() {
+      if (typeof populateWilayaSelect === 'function') populateWilayaSelect('prof-wilaya');
+      try {
+        const p = await window.api.getMyProfile();
+        document.getElementById('prof-name').value = p.full_name || '';
+        document.getElementById('prof-inst').value = p.institution_name || '';
+        document.getElementById('prof-phone').value = p.phone || '';
+        if (p.wilaya) document.getElementById('prof-wilaya').value = p.wilaya;
+
+        const elHeaderName = document.getElementById('prof-header-name');
+        if (elHeaderName) elHeaderName.innerText = p.full_name || (currentUser ? currentUser.email : 'Dr. Clinician');
+
+        const elLargeInit = document.getElementById('prof-avatar-large');
+        if (elLargeInit) elLargeInit.innerText = (p.full_name || 'DR').slice(0, 2).toUpperCase();
+
+        const elEmailDisp = document.getElementById('prof-email-display');
+        if (elEmailDisp && currentUser) elEmailDisp.innerText = currentUser.email || '';
+
+        const elTypeBadge = document.getElementById('prof-type-badge');
+        if (elTypeBadge) {
+          const isSpec = p.doctor_type === 'specialist_dermatologist';
+          elTypeBadge.innerText = isSpec ? 'Specialist Dermatologist' : 'General Practitioner';
+          elTypeBadge.className = isSpec ? 'badge badge-active' : 'badge badge-secondary';
+        }
+
+        const elLicense = document.getElementById('prof-license');
+        if (elLicense) elLicense.value = p.license_number || 'DZ-MSP-VERIFIED';
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    const profileForm = document.getElementById('profile-form');
+    if (profileForm) {
+      profileForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const payload = {
+          full_name: document.getElementById('prof-name').value.trim(),
+          institution_name: document.getElementById('prof-inst').value.trim() || null,
+          phone: document.getElementById('prof-phone').value.trim() || null,
+          wilaya: document.getElementById('prof-wilaya').value,
+        };
+
+        try {
+          await window.api.updateMyProfile(payload);
+          window.showToast('Profile updated successfully!', 'success');
+          updateHeaderUser();
+        } catch (err) {
+          window.showToast(err.message, 'error');
+        }
+      });
+    }
+
+    // ── Respond to Referral Handler ──
+    function openRespondReferralModal(refId) {
+      document.getElementById('resp-ref-id').value = refId;
+      document.getElementById('resp-notes').value = '';
+      document.getElementById('resp-status').value = 'completed';
+      openModal('modal-respond-referral');
+    }
+
+    const respondRefForm = document.getElementById('respond-referral-form');
+    if (respondRefForm) {
+      respondRefForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const refId = document.getElementById('resp-ref-id').value;
+        const status = document.getElementById('resp-status').value;
+        const specialist_response = document.getElementById('resp-notes').value.trim();
+        const btn = document.getElementById('btn-submit-ref-resp');
+
+        btn.disabled = true;
+        btn.innerText = 'Submitting...';
+        try {
+          await window.api.respondReferral(refId, { status, specialist_response });
+          window.showToast('Specialist response submitted successfully!', 'success');
+          closeModal('modal-respond-referral');
+          loadReferrals('received');
+        } catch (err) {
+          window.showToast(err.message, 'error');
+        } finally {
+          btn.disabled = false;
+          btn.innerText = 'Submit Response';
+        }
+      });
+    }
+
+    // ── Demo Video Handlers ──
+    function openDemoVideoModal(e) {
+      if (e) e.preventDefault();
+      openModal('modal-video-demo');
+      const v = document.getElementById('doctor-video-player');
+      if (v) v.play();
+    }
+
+    function closeDemoVideoModal() {
+      closeModal('modal-video-demo');
+      const v = document.getElementById('doctor-video-player');
+      if (v) { v.pause(); v.currentTime = 0; }
+    }
+
+    // ── Modals Logic ──
+    function openGradCamModal(origUrl, gradUrl) {
+      document.getElementById('modal-img-orig').src = origUrl || '/dashboard/assets/images/screenshot-clinical.jpg';
+      document.getElementById('modal-img-grad').src = gradUrl || '/dashboard/assets/images/screenshot-results.jpg';
+      document.getElementById('gradcam-slider').value = 50;
+      document.getElementById('modal-img-grad').style.opacity = '0.5';
+      openModal('modal-gradcam');
+    }
+
+    const slider = document.getElementById('gradcam-slider');
+    if (slider) {
+      slider.addEventListener('input', (e) => {
+        document.getElementById('modal-img-grad').style.opacity = e.target.value / 100;
+      });
+    }
+
+    function openFeedbackModal(analysisId) {
+      document.getElementById('feedback-analysis-id').value = analysisId;
+      openModal('modal-feedback');
+    }
+
+    const feedbackForm = document.getElementById('feedback-form');
+    if (feedbackForm) {
+      feedbackForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('feedback-analysis-id').value;
+        const payload = {
+          doctor_confirmed: document.getElementById('fb-confirmed').value === 'true',
+          doctor_diagnosis: document.getElementById('fb-diagnosis').value.trim() || null,
+          biopsy_performed: document.getElementById('fb-biopsy-performed').checked,
+          biopsy_result: document.getElementById('fb-biopsy-result').value.trim() || null,
+          next_followup_date: document.getElementById('fb-followup-date').value || null,
+        };
+
+        try {
+          await window.api.updateFeedback(id, payload);
+          window.showToast('Clinical feedback saved!', 'success');
+          closeModal('modal-feedback');
+          loadOverview();
+          if (document.getElementById('tab-analyses').classList.contains('active')) loadAnalyses();
+        } catch (err) {
+          window.showToast(err.message, 'error');
+        }
+      });
+    }
+
+    async function openReferralModal(analysisId) {
+      document.getElementById('ref-analysis-id').value = analysisId;
+      try {
+        const docs = await window.api.getPublicDoctors({ doctor_type: 'specialist_dermatologist' });
+        const select = document.getElementById('ref-specialist-select');
+        select.innerHTML = '<option value="" data-i18n="opt_ref_unassigned">-- General Unassigned Specialist Queue --</option>' +
+          docs.map(d => `<option value="${d.id}">${window.escapeHtml(d.full_name)} (${window.escapeHtml(d.institution_name || 'Wilaya ' + d.wilaya)})</option>`).join('');
+      } catch (_) {}
+      openModal('modal-referral');
+    }
+
+    const createRefForm = document.getElementById('create-referral-form');
+    if (createRefForm) {
+      createRefForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const payload = {
+          analysis_id: document.getElementById('ref-analysis-id').value,
+          specialist_id: document.getElementById('ref-specialist-select').value || null,
+          referral_note: document.getElementById('ref-note').value.trim(),
+        };
+
+        try {
+          await window.api.createReferral(payload);
+          window.showToast('Referral case dispatched successfully!', 'success');
+          closeModal('modal-referral');
+        } catch (err) {
+          window.showToast(err.message, 'error');
+        }
+      });
+    }
+
+    async function downloadPdf(analysisId) {
+      try {
+        window.showToast('Generating official medical PDF...', 'info');
+        const blob = await window.api.exportPdf(analysisId);
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `MedAssist_Report_${analysisId.slice(0, 8)}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+      } catch (err) {
+        window.showToast(err.message || 'Failed to download PDF', 'error');
+      }
+    }
+
+    // ── Header & Profile Refresh ──
+    async function updateHeaderUser() {
+      try {
+        const u = await window.api.getMe();
+        if (u) setupUserDetails(u);
+      } catch (_) {}
+    }
+
+    // Dynamic Tab Translation on Language Switch
+    window.refreshActiveTabLanguage = function(lang) {
+      updateActiveTabHeaderTitle();
+      const activePane = document.querySelector('.tab-pane.active');
+      if (!activePane) return;
+      const tabId = activePane.id.replace('tab-', '');
+      if (tabId === 'overview' && typeof loadOverview === 'function') {
+        loadOverview();
+      } else if (tabId === 'analyses' && typeof loadAnalyses === 'function') {
+        loadAnalyses();
+      } else if (tabId === 'patients' && typeof loadPatients === 'function') {
+        loadPatients();
+      } else if (tabId === 'referrals' && typeof loadReferrals === 'function') {
+        loadReferrals('sent');
+      } else if (tabId === 'profile' && typeof loadProfile === 'function') {
+        loadProfile();
+      }
+    };
+
+    // ── Startup & Lifecycle Orchestration ──
+    // ── Mandatory Password Form Handler ──
+    const pwdForm = document.getElementById('must-change-pwd-form');
+    if (pwdForm) {
+      pwdForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const currentPwd = document.getElementById('pwd-current').value;
+        const newPwd = document.getElementById('pwd-new').value;
+        const confirmPwd = document.getElementById('pwd-confirm').value;
+
+        if (newPwd !== confirmPwd) {
+          window.showToast(window.t('pwd_mismatch', 'New passwords do not match.'), 'error');
+          return;
+        }
+
+        const btn = document.getElementById('btn-submit-pwd');
+        btn.disabled = true;
+        btn.innerText = 'Updating Password...';
+
+        try {
+          await window.api.changePassword(currentPwd, newPwd);
+          window.showToast(window.t('pwd_updated_success', 'Password updated successfully! Welcome to your clinical dashboard.'), 'success');
+          const pwdModal = document.getElementById('modal-must-change-password');
+          if (pwdModal) pwdModal.style.display = 'none';
+
+          if (currentUser) {
+            currentUser.must_change_password = false;
+            window.api.setCurrentUser(currentUser);
+          }
+
+          if (currentUser && currentUser.status === 'active') {
+            await loadOverview();
+          }
+        } catch (err) {
+          window.showToast(err.message || 'Failed to update password', 'error');
+          btn.disabled = false;
+          btn.innerText = window.t('btn_update_pwd', 'Update Password & Activate Account');
+        }
+      });
+    }
+
+    (async function init() {
+      try {
+        const u = await ensureDoctorAuth();
+        if (u) {
+          setupUserDetails(u);
+
+          // Check 1: Mandatory Password Change
+          if (u.must_change_password) {
+            const pwdModal = document.getElementById('modal-must-change-password');
+            if (pwdModal) pwdModal.style.display = 'flex';
+            return;
+          }
+
+          // Check 2: Pending Administrative Verification
+          if (u.status === 'pending_verification') {
+            const banner = document.getElementById('pending-verification-banner');
+            if (banner) banner.style.display = 'flex';
+            const scanBtn = document.getElementById('btn-run-inference');
+            if (scanBtn) {
+              scanBtn.disabled = true;
+              scanBtn.innerText = window.t('status_pending_verif', 'Pending Verification');
+              scanBtn.style.opacity = '0.6';
+              scanBtn.style.cursor = 'not-allowed';
+            }
+            return;
+          }
+
+          await loadOverview();
+        }
+      } catch (err) {
+        console.error('Initialization error:', err);
+      }
+
+      if (typeof window.syncPlatformResources === 'function') {
+        window.syncPlatformResources();
+      }
+
+      const initialHash = window.location.hash.replace('#', '');
+      if (initialHash && initialHash !== 'overview') {
+        setTimeout(() => switchTab(initialHash, false), 50);
+      }
+    })();
+  </script>
+</body>
+</html>
+

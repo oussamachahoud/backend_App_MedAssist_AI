@@ -1,14 +1,22 @@
 """
 app/models/response.py
 Pydantic response models returned by the API endpoints.
+Updated for V2.0 to support persistent AnalysisRecords, Grad-CAM, and referral suggestions.
 """
 
+import uuid
 from datetime import datetime, timezone
 from typing import Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
-from app.models.schemas import DiagnosticLabel, BodyRegion, RiskLevel, LABEL_FULL_NAME, RISK_COLOR
+from app.models.schemas import (
+    BodyRegion,
+    DiagnosticLabel,
+    LABEL_FULL_NAME,
+    RISK_COLOR,
+    RiskLevel,
+)
 
 
 # ── Health ────────────────────────────────────────────────────────────────────
@@ -20,7 +28,7 @@ class HealthResponse(BaseModel):
     model_loaded: bool = Field(..., description="Whether the ML model is loaded and ready")
     uptime_seconds: float = Field(..., description="Seconds since the API started")
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    version: str = Field(..., examples=["1.0.0"])
+    version: str = Field(..., examples=["2.0.0"])
 
 
 # ── Model Info ────────────────────────────────────────────────────────────────
@@ -30,10 +38,10 @@ class ModelInfoResponse(BaseModel):
 
     model_name: str = Field(..., examples=["Multimodal Skin Lesion Classifier"])
     architecture: str = Field(..., examples=["CNN + Tabular MLP"])
-    input_image_size: int = Field(..., examples=[224])
+    input_image_size: int = Field(..., examples=[256])
     input_channels: int = Field(default=3, examples=[3])
     tabular_features: List[str] = Field(
-        default=["age", "sex", "localization"],
+        default=["age", "sex", "grew", "bleed", "diameter_1", "skin_cancer_history", "elevation"],
         description="Tabular feature names fed to the model",
     )
     diagnostic_classes: Dict[str, str] = Field(
@@ -41,7 +49,7 @@ class ModelInfoResponse(BaseModel):
         description="Mapping of class code → full name",
         examples=[{"NEV": "Nevus", "MEL": "Melanoma"}],
     )
-    version: str = Field(..., examples=["1.0.0"])
+    version: str = Field(..., examples=["2.0.0"])
     is_loaded: bool
 
 
@@ -57,7 +65,7 @@ class ClassProbability(BaseModel):
 class PredictResponse(BaseModel):
     """
     Full prediction response from POST /predict.
-    Contains diagnosis, confidence scores, risk assessment, and timing.
+    Contains diagnosis, confidence scores, risk assessment, timing, and V2 telemedicine hooks.
     """
 
     # ── Primary Prediction ────────────────────────────────
@@ -111,9 +119,32 @@ class PredictResponse(BaseModel):
         default=[],
         description="Clinical action recommendations based on risk level",
     )
+    suggest_referral: bool = Field(
+        default=False,
+        description="Whether tele-dermatology specialist referral is recommended",
+    )
+    risk_escalated: bool = Field(
+        default=False,
+        description="Whether risk level was escalated due to low confidence (<50%)",
+    )
+
+    # ── V2 Telemedicine & Storage Hooks ───────────────────
+    analysis_id: Optional[uuid.UUID] = Field(
+        default=None,
+        description="Database UUID of the stored analysis record in PostgreSQL",
+    )
+    image_url: Optional[str] = Field(
+        default=None,
+        description="Presigned URL or object key of the uploaded dermoscopy image in MinIO",
+    )
+    gradcam_url: Optional[str] = Field(
+        default=None,
+        description="Presigned URL or object key of the generated Grad-CAM++ visualization in MinIO",
+    )
 
     # ── Metadata ──────────────────────────────────────────
     patient_id: Optional[str] = Field(default=None, examples=["PAT-00123"])
+    lesion_tag: Optional[str] = Field(default=None, examples=["Right Arm Mole"])
     inference_time_ms: float = Field(
         ...,
         description="Model inference time in milliseconds",
@@ -134,6 +165,12 @@ class PredictResponse(BaseModel):
         inference_time_ms: float,
         predicted_region: Optional[str] = None,
         patient_id: Optional[str] = None,
+        lesion_tag: Optional[str] = None,
+        analysis_id: Optional[uuid.UUID] = None,
+        suggest_referral: bool = False,
+        risk_escalated: bool = False,
+        image_url: Optional[str] = None,
+        gradcam_url: Optional[str] = None,
     ) -> "PredictResponse":
         """Factory method to build a PredictResponse cleanly."""
         prob_list = [
@@ -145,16 +182,27 @@ class PredictResponse(BaseModel):
             for lbl, prob in sorted(all_probs.items(), key=lambda x: -x[1])
         ]
 
+        try:
+            diag_label = DiagnosticLabel(predicted_label)
+        except ValueError:
+            diag_label = DiagnosticLabel.UNKNOWN
+
         return cls(
-            predicted_label=DiagnosticLabel(predicted_label),
+            predicted_label=diag_label,
             predicted_label_full=LABEL_FULL_NAME.get(predicted_label, predicted_label),
             confidence=round(confidence, 6),
             all_probabilities=prob_list,
             predicted_region=BodyRegion(predicted_region) if predicted_region else None,
             risk_level=risk_level,
-            risk_color=RISK_COLOR.get(risk_level, "#6b7280"),
+            risk_color=RISK_COLOR.get(risk_level, "#64748b"),
             risk_explanation=risk_explanation,
             recommendations=recommendations,
+            suggest_referral=suggest_referral,
+            risk_escalated=risk_escalated,
+            analysis_id=analysis_id,
+            image_url=image_url,
+            gradcam_url=gradcam_url,
             patient_id=patient_id,
+            lesion_tag=lesion_tag,
             inference_time_ms=round(inference_time_ms, 3),
         )

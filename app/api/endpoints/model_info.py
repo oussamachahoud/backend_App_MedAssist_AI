@@ -41,10 +41,10 @@ async def get_model_info() -> ModelInfoResponse:
 
     return ModelInfoResponse(
         model_name="Multimodal Skin Lesion Classifier",
-        architecture="CNN ImageEncoder + Tabular MLP → Fusion Head",
+        architecture="MedAssistModel V6.0 (EfficientNet-B3 + GeM + MLP + GatedCrossAttentionFusion)",
         input_image_size=settings.image_size,
         input_channels=3,
-        tabular_features=["age (normalised)", "sex (encoded)", "localization (encoded)"],
+        tabular_features=["age", "sex", "grew", "bleed", "diameter_1", "skin_cancer_history", "elevation"],
         diagnostic_classes=diagnostic_classes,
         version=settings.api_version,
         is_loaded=model_service.is_loaded,

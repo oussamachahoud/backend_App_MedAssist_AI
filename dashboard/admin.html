@@ -1,0 +1,1249 @@
+﻿<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MedAssist AI — System Administration & Governance</title>
+  <link rel="stylesheet" href="/dashboard/assets/css/dashboard.css" />
+  <link rel="icon" type="image/jpeg" href="/dashboard/assets/images/app-icon.jpg" />
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- ── Sidebar ──────────────────────────────────────────────────────── -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <img src="/dashboard/assets/images/app-icon.jpg" alt="Logo" class="sidebar-brand-icon" />
+        <span class="sidebar-brand-text">MedAssist AI</span>
+        <span class="sidebar-badge" style="background: rgba(139, 92, 246, 0.2); color: var(--purple-400); border-color: rgba(139, 92, 246, 0.4);">
+          Admin
+        </span>
+      </div>
+
+      <nav class="sidebar-menu">
+        <a class="sidebar-item active" data-tab="overview">
+          <span class="sidebar-item-icon">📊</span>
+          <span data-i18n="nav_overview">System Metrics</span>
+        </a>
+        <a class="sidebar-item" data-tab="users">
+          <span class="sidebar-item-icon">👥</span>
+          <span data-i18n="nav_users">Clinicians & Users</span>
+        </a>
+        <a class="sidebar-item" data-tab="analytics">
+          <span class="sidebar-item-icon">📈</span>
+          <span data-i18n="nav_analytics">Regional & AI Analytics</span>
+        </a>
+        <a class="sidebar-item" data-tab="audit">
+          <span class="sidebar-item-icon">🛡️</span>
+          <span data-i18n="nav_audit">Security Audit Trail</span>
+        </a>
+        <a class="sidebar-item" data-tab="resources">
+          <span class="sidebar-item-icon">⚙️</span>
+          <span data-i18n="nav_manage_res">Platform Resources</span>
+        </a>
+
+        <div style="margin: 0.75rem 0.5rem; border-top: 1px solid var(--border-glass-light); padding-top: 0.75rem;">
+          <span style="font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); padding: 0 0.5rem; display: block; margin-bottom: 0.35rem;" data-i18n="nav_resources">Live Channels</span>
+          <a href="/dashboard/landing.html" class="sidebar-item" target="_blank">
+            <span class="sidebar-item-icon">🌐</span>
+            <span data-i18n="nav_landing">Landing Page</span>
+          </a>
+          <a href="https://youtube.com/shorts/tRxtxYG6B8c?si=AkQqDnujgsMIfaL2" target="_blank" rel="noopener noreferrer" class="sidebar-item" id="admin-sidebar-video-link" style="color: var(--teal-400);">
+            <span class="sidebar-item-icon">🎬</span>
+            <span data-i18n="nav_video">Video Walkthrough</span>
+          </a>
+          <a href="#resources" onclick="switchTab('resources')" class="sidebar-item" style="color: var(--purple-400);">
+            <span class="sidebar-item-icon">🚀</span>
+            <span data-i18n="nav_apk">Upload New APK</span>
+          </a>
+        </div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-badge">
+          <div class="user-avatar" style="color: var(--purple-400); border-color: rgba(139, 92, 246, 0.4);">AD</div>
+          <div class="user-info">
+            <span class="user-name" id="admin-user-name" data-i18n="role_superuser">System Administrator</span>
+            <span class="user-role" data-i18n="role_superuser">Superuser</span>
+          </div>
+        </div>
+        <button class="btn btn-sm btn-secondary" onclick="window.api.logout()" title="Sign Out" style="padding: 0.35rem 0.5rem;">
+          🚪
+        </button>
+      </div>
+    </aside>
+
+    <!-- ── Main Wrapper ─────────────────────────────────────────────────── -->
+    <div class="main-wrapper">
+      <header class="top-header">
+        <div class="header-title-box">
+          <h1 id="page-title" data-i18n="title_admin_overview">Platform Administration</h1>
+          <p id="page-subtitle" data-i18n="sub_admin_overview">Governance, Clinician Credentialing & System Analytics</p>
+        </div>
+        <div class="header-actions" style="display: flex; align-items: center; gap: 0.75rem;">
+          <div class="lang-toggle">
+            <button type="button" class="lang-btn active" id="dash-lang-en">EN</button>
+            <button type="button" class="lang-btn" id="dash-lang-fr">FR</button>
+            <button type="button" class="lang-btn" id="dash-lang-ar">عربي</button>
+          </div>
+          <span class="badge badge-active" data-i18n="badge_healthy">● System Healthy</span>
+        </div>
+      </header>
+
+      <main class="page-content">
+
+        <!-- ── TAB 1: SYSTEM METRICS OVERVIEW ──────────────────────────── -->
+        <section id="tab-overview" class="tab-pane active">
+          <div class="metrics-grid">
+            <div class="glass-card metric-card">
+              <div class="metric-icon-box metric-icon-teal">👥</div>
+              <div class="metric-info">
+                <span class="metric-value" id="adm-total-users">0</span>
+                <span class="metric-label" data-i18n="adm_metric_registered_accounts">Registered Accounts</span>
+              </div>
+            </div>
+            <div class="glass-card metric-card">
+              <div class="metric-icon-box metric-icon-blue">🩺</div>
+              <div class="metric-info">
+                <span class="metric-value" id="adm-active-docs">0</span>
+                <span class="metric-label" data-i18n="adm_metric_active_docs">Active Verified Clinicians</span>
+              </div>
+            </div>
+            <div class="glass-card metric-card">
+              <div class="metric-icon-box metric-icon-amber">⏳</div>
+              <div class="metric-info">
+                <span class="metric-value" id="adm-pending-docs">0</span>
+                <span class="metric-label" data-i18n="adm_metric_pending_docs">Pending Verification</span>
+              </div>
+            </div>
+            <div class="glass-card metric-card">
+              <div class="metric-icon-box metric-icon-purple">🔬</div>
+              <div class="metric-info">
+                <span class="metric-value" id="adm-total-analyses">0</span>
+                <span class="metric-label" data-i18n="adm_metric_total_analyses">Total AI Scans Conducted</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pending Verification Queue -->
+          <div class="glass-card" style="margin-bottom: 2rem;">
+            <div class="glass-card-header">
+              <span class="glass-card-title" data-i18n="adm_pending_queue_title">Pending Doctor Verification Requests</span>
+              <button class="btn btn-secondary btn-sm" onclick="switchTab('users')" data-i18n="adm_manage_users_btn">Manage All Users &rarr;</button>
+            </div>
+            <div class="table-responsive">
+              <table class="custom-table">
+                <thead>
+                  <tr>
+                    <th data-i18n="th_doctor_email">Doctor Email</th>
+                    <th data-i18n="th_full_name">Full Name</th>
+                    <th data-i18n="th_role_spec">Role / Specialization</th>
+                    <th data-i18n="th_license_inst">License / Institution</th>
+                    <th data-i18n="th_action">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="pending-users-tbody">
+                  <tr><td colspan="5" style="text-align: center; color: var(--text-muted);" data-i18n="adm_loading_pending">Loading pending requests...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── TAB 2: CLINICIANS & USERS MANAGEMENT ────────────────────── -->
+        <section id="tab-users" class="tab-pane">
+          <div class="glass-card">
+            <div class="glass-card-header" style="flex-wrap: wrap; gap: 1rem;">
+              <span class="glass-card-title" data-i18n="adm_user_accounts_title">User Accounts & Access Control</span>
+              <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                <select id="user-filter-status" class="form-control" style="width: auto; padding: 0.4rem 0.8rem;">
+                  <option value="" data-i18n="opt_all_statuses">All Statuses</option>
+                  <option value="active" data-i18n="opt_status_active">Active</option>
+                  <option value="pending_verification" data-i18n="opt_status_pending">Pending Verification</option>
+                  <option value="suspended" data-i18n="opt_status_suspended">Suspended</option>
+                </select>
+                <div class="search-box">
+                  <span class="search-icon">🔍</span>
+                  <input type="text" id="user-search-input" class="form-control" placeholder="Search by email..." data-i18n-placeholder="ph_search_email" />
+                </div>
+              </div>
+            </div>
+
+            <div class="table-responsive">
+              <table class="custom-table">
+                <thead>
+                  <tr>
+                    <th data-i18n="th_clinician_email">Clinician Email</th>
+                    <th data-i18n="th_name_role">Name / Role</th>
+                    <th data-i18n="th_institution_wilaya">Institution & Wilaya</th>
+                    <th data-i18n="th_status">Status</th>
+                    <th data-i18n="th_registered">Registered</th>
+                    <th data-i18n="th_gov_actions">Governance Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="users-tbody">
+                  <tr><td colspan="6" style="text-align: center; color: var(--text-muted);" data-i18n="adm_loading_users">Loading user records...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── TAB 3: REGIONAL & AI ANALYTICS ──────────────────────────── -->
+        <section id="tab-analytics" class="tab-pane">
+          <div class="metrics-grid">
+            <div class="glass-card metric-card">
+              <div class="metric-icon-box metric-icon-teal">🎯</div>
+              <div class="metric-info">
+                <span class="metric-value" id="an-concordance">0%</span>
+                <span class="metric-label" data-i18n="adm_metric_concordance">AI/Doctor Concordance Rate</span>
+              </div>
+            </div>
+            <div class="glass-card metric-card">
+              <div class="metric-icon-box metric-icon-blue">⚡</div>
+              <div class="metric-info">
+                <span class="metric-value" id="an-latency">0 ms</span>
+                <span class="metric-label" data-i18n="adm_metric_latency">Average AI Inference Latency</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="charts-grid">
+            <div class="glass-card">
+              <div class="glass-card-header">
+                <span class="glass-card-title" data-i18n="adm_chart_wilayas">National Geographic Coverage (Wilayas)</span>
+              </div>
+              <div class="chart-container">
+                <canvas id="chart-wilayas"></canvas>
+              </div>
+            </div>
+            <div class="glass-card">
+              <div class="glass-card-header">
+                <span class="glass-card-title" data-i18n="adm_chart_pathology">National Pathology Distribution</span>
+              </div>
+              <div class="chart-container">
+                <canvas id="chart-admin-diagnoses"></canvas>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── TAB 4: AUDIT TRAIL ──────────────────────────────────────── -->
+        <section id="tab-audit" class="tab-pane">
+          <div class="glass-card">
+            <div class="glass-card-header">
+              <span class="glass-card-title" data-i18n="adm_audit_title">System & Security Audit Log</span>
+              <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="audit-action-filter" class="form-control" placeholder="Filter by action..." data-i18n-placeholder="ph_filter_action" />
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table class="custom-table">
+                <thead>
+                  <tr>
+                    <th data-i18n="th_timestamp">Timestamp</th>
+                    <th data-i18n="th_action">Action</th>
+                    <th data-i18n="th_resource">Resource</th>
+                    <th data-i18n="th_user_id">User ID</th>
+                    <th data-i18n="th_ip_address">IP Address</th>
+                  </tr>
+                </thead>
+                <tbody id="audit-tbody">
+                  <tr><td colspan="5" style="text-align: center; color: var(--text-muted);" data-i18n="adm_loading_audit">Loading audit trail...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── TAB 5: PLATFORM RESOURCES MANAGEMENT ────────────────────── -->
+                <!-- ── TAB 5: PLATFORM RESOURCES GOVERNANCE & APK DEPLOYMENT ── -->
+                <!-- ── TAB 5: PLATFORM RESOURCES GOVERNANCE & APK DEPLOYMENT ── -->
+        <section id="tab-resources" class="tab-pane">
+          <div style="max-width: 980px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.5rem;">
+            
+            <!-- CARD 1: MOBILE APPLICATION (APK) RELEASE MANAGEMENT -->
+            <div class="glass-card">
+              <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-glass-light); padding-bottom: 1rem; margin-bottom: 1.25rem;">
+                <div>
+                  <h3 style="font-size: 1.2rem; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 0.5rem;">
+                    <span>📱</span>
+                    <span data-i18n="res_card1_title">Mobile Application Package (Android APK)</span>
+                  </h3>
+                  <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">
+                    <span data-i18n="res_card1_sub">Upload updated .apk binaries to deploy new releases across the clinician network without touching server code.</span>
+                  </p>
+                </div>
+                <span class="badge badge-active" id="apk-status-badge" data-i18n="res_status_active_deployment">● Active Deployment</span>
+              </div>
+
+              <!-- Active APK Status Overview -->
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; background: rgba(7, 19, 36, 0.45); padding: 1.1rem; border-radius: var(--radius-md); border: 1px solid var(--border-glass);">
+                <div>
+                  <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;" data-i18n="res_label_pkg_name">Active Package Name</div>
+                  <div style="font-size: 0.95rem; font-weight: 700; color: #fff; margin-top: 0.2rem;" id="apk-disp-name">MedAssist-AI.apk</div>
+                </div>
+                <div>
+                  <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;" data-i18n="res_label_file_size">Current File Size</div>
+                  <div style="font-size: 0.95rem; font-weight: 700; color: var(--teal-400); margin-top: 0.2rem;" id="apk-disp-size">55.57 MB</div>
+                </div>
+                <div>
+                  <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;" data-i18n="res_lbl_deployed_date">Last Deployed Date</div>
+                  <div style="font-size: 0.85rem; font-weight: 600; color: #fff; margin-top: 0.2rem;" id="apk-disp-date">Active</div>
+                </div>
+                <div style="display: flex; align-items: center;">
+                  <a id="apk-active-download-btn" href="/dashboard/assets/downloads/MedAssist-AI.apk" download class="btn btn-sm btn-secondary" style="width: 100%; text-align: center;" data-i18n="res_btn_download_active_apk">⬇ Download Active APK</a>
+                </div>
+              </div>
+
+              <!-- Upload New APK Dropzone -->
+              <div style="border: 2px dashed var(--border-glass); border-radius: var(--radius-md); padding: 1.75rem 1.5rem; text-align: center; background: rgba(7, 19, 36, 0.35); cursor: pointer; transition: var(--transition);" id="apk-dropzone">
+                <input type="file" id="apk-file-input" accept=".apk" style="display: none;" />
+                <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">📦</div>
+                <h4 style="font-size: 1.05rem; color: #fff; font-weight: 600; margin-bottom: 0.25rem;" data-i18n="res_dropzone_title">Upload New APK Version</h4>
+                <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+                  <span data-i18n="res_dropzone_sub">Drag & drop new .apk build here, or click to browse from your computer</span>
+                </p>
+                <div id="apk-file-info" style="display: none; padding: 0.5rem 1rem; background: rgba(0, 201, 167, 0.1); border: 1px solid var(--teal-500); border-radius: var(--radius-sm); margin: 0.75rem auto; max-width: 420px;">
+                  <span id="apk-file-name" style="font-weight: 700; color: var(--teal-300);"></span>
+                  <span id="apk-file-size" style="font-size: 0.75rem; color: var(--text-muted); margin-left: 0.5rem;"></span>
+                </div>
+                <button type="button" class="btn btn-primary" id="btn-deploy-apk" disabled style="margin-top: 0.5rem;">
+                  <span data-i18n="res_btn_deploy_apk">🚀 Deploy & Replace APK</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- CARD 2: MASTER THESIS & RESEARCH DOCUMENTATION UPLOAD (EN & FR) -->
+            <div class="glass-card">
+              <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-glass-light); padding-bottom: 1rem; margin-bottom: 1.25rem;">
+                <div>
+                  <h3 style="font-size: 1.2rem; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 0.5rem;">
+                    <span>🎓</span>
+                    <span data-i18n="res_card2_title">Master Thesis & Research Documentation (PDF Upload)</span>
+                  </h3>
+                  <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">
+                    <span data-i18n="res_card2_sub">Directly upload and deploy official Master Thesis PDFs (English & French versions) downloadable across the platform.</span>
+                  </p>
+                </div>
+                <span class="badge badge-teal" data-i18n="res_badge_academic">Academic Degree</span>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                <!-- English Thesis Box -->
+                <div style="background: rgba(7, 19, 36, 0.45); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-glass);">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                    <span style="font-weight: 700; color: #fff; font-size: 0.95rem;" data-i18n="res_en_thesis_box_title">🇬🇧 English Thesis (PDF)</span>
+                    <span class="badge badge-secondary" id="thesis-en-size-badge">4.20 MB</span>
+                  </div>
+                  <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 1rem;">
+                    <span data-i18n="res_canonical_target">Canonical target:</span> <code>Thesis_Master_GLAA_EN.pdf</code>
+                  </p>
+                  <input type="file" id="thesis-en-input" accept=".pdf" style="display: none;" />
+                  <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <button type="button" class="btn btn-sm btn-secondary" onclick="document.getElementById('thesis-en-input').click()">
+                      <span data-i18n="res_btn_choose_pdf">📁 Choose PDF</span>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-primary" id="btn-upload-thesis-en" disabled>
+                      <span data-i18n="res_btn_upload_en">⬆ Upload EN</span>
+                    </button>
+                    <a id="thesis-en-dl-test" href="/dashboard/assets/docs/Thesis_Master_GLAA_EN.pdf" download class="btn btn-sm btn-secondary" title="Verify File">
+                      <span data-i18n="res_btn_test_dl">⬇ Test</span>
+                    </a>
+                  </div>
+                  <div id="thesis-en-selected-name" style="font-size: 0.75rem; color: var(--teal-300); margin-top: 0.5rem; display: none;"></div>
+                </div>
+
+                <!-- French Thesis Box -->
+                <div style="background: rgba(7, 19, 36, 0.45); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-glass);">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                    <span style="font-weight: 700; color: #fff; font-size: 0.95rem;" data-i18n="res_fr_thesis_box_title">🇫🇷 French Thesis (PDF)</span>
+                    <span class="badge badge-secondary" id="thesis-fr-size-badge">4.35 MB</span>
+                  </div>
+                  <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 1rem;">
+                    <span data-i18n="res_canonical_target">Canonical target:</span> <code>Thesis_Master_GLAA_FR.pdf</code>
+                  </p>
+                  <input type="file" id="thesis-fr-input" accept=".pdf" style="display: none;" />
+                  <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <button type="button" class="btn btn-sm btn-secondary" onclick="document.getElementById('thesis-fr-input').click()">
+                      <span data-i18n="res_btn_choose_pdf">📁 Choisir PDF</span>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-primary" id="btn-upload-thesis-fr" disabled>
+                      <span data-i18n="res_btn_upload_fr">⬆ Téléverser FR</span>
+                    </button>
+                    <a id="thesis-fr-dl-test" href="/dashboard/assets/docs/Thesis_Master_GLAA_FR.pdf" download class="btn btn-sm btn-secondary" title="Verify File">
+                      <span data-i18n="res_btn_test_dl">⬇ Test</span>
+                    </a>
+                  </div>
+                  <div id="thesis-fr-selected-name" style="font-size: 0.75rem; color: var(--teal-300); margin-top: 0.5rem; display: none;"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- CARD: MOBILE APK QR CODE (SVG UPLOAD) -->
+            <div class="glass-card">
+              <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-glass-light); padding-bottom: 1rem; margin-bottom: 1.25rem;">
+                <div>
+                  <h3 style="font-size: 1.2rem; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 0.5rem;">
+                    <span>📱</span>
+                    <span data-i18n="res_card_qr_title">Mobile APK Download QR Code (SVG Upload)</span>
+                  </h3>
+                  <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">
+                    <span data-i18n="res_card_qr_sub">Upload a custom vector SVG QR code displayed on the landing page for quick mobile scanning and APK install.</span>
+                  </p>
+                </div>
+                <span class="badge badge-teal" data-i18n="res_qr_target">Vector SVG</span>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 180px 1fr; gap: 1.5rem; align-items: center;">
+                <!-- QR Preview -->
+                <div style="text-align: center; background: rgba(7, 19, 36, 0.6); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-glass);">
+                  <div style="width: 140px; height: 140px; margin: 0 auto; background: #fff; border-radius: var(--radius-sm); padding: 0.5rem; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+                    <img id="admin-qr-preview-img" src="/dashboard/assets/images/qr-code.svg" alt="Active QR Code" style="width: 100%; height: 100%; object-fit: contain;" onerror="this.src='/dashboard/assets/images/app-icon.jpg'" />
+                  </div>
+                  <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.5rem;">
+                    <code>qr-code.svg</code>
+                  </div>
+                </div>
+
+                <!-- Upload Controls -->
+                <div>
+                  <input type="file" id="qr-file-input" accept=".svg,image/svg+xml" style="display: none;" />
+                  <div style="font-size: 0.85rem; color: #fff; font-weight: 600; margin-bottom: 0.35rem;" data-i18n="res_label_select_svg">
+                    Select New Vector SVG File
+                  </div>
+                  <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 1rem;" data-i18n="res_svg_hint">
+                    Vector SVG format is required for ultra-sharp resolution on all smartphone screens and printed displays.
+                  </p>
+                  
+                  <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
+                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('qr-file-input').click()">
+                      <span data-i18n="res_btn_choose_svg">📁 Choose SVG File</span>
+                    </button>
+                    <button type="button" class="btn btn-primary" id="btn-deploy-qr" disabled>
+                      <span data-i18n="res_btn_upload_qr">🚀 Upload & Replace QR Code</span>
+                    </button>
+                    <a id="qr-test-link" href="/dashboard/assets/images/qr-code.svg" target="_blank" class="btn btn-secondary" title="View Current SVG">
+                      <span data-i18n="res_btn_test_qr">⬇ View SVG</span>
+                    </a>
+                  </div>
+                  <div id="qr-file-selected-name" style="font-size: 0.78rem; color: var(--teal-300); margin-top: 0.6rem; display: none;"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- CARD 3: MEDIA LINKS & WEB PORTALS CONFIGURATION -->
+            <div class="glass-card">
+              <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-glass-light); padding-bottom: 1rem; margin-bottom: 1.25rem;">
+                <div>
+                  <h3 style="font-size: 1.2rem; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 0.5rem;">
+                    <span>🌐</span>
+                    <span data-i18n="res_video_platform_urls">Video Walkthrough & Platform URLs</span>
+                  </h3>
+                  <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">
+                    Set external video showcase links, landing page route, and master thesis research documentation.
+                  </p>
+                </div>
+                <span class="badge badge-purple" data-i18n="res_badge_live_sync">Live Sync</span>
+              </div>
+
+              <form id="admin-resources-form">
+                <div class="form-group" style="margin-bottom: 1.25rem;">
+                  <label class="form-label" for="res-video-url">
+                    Video Walkthrough URL (YouTube Shorts / Video or Direct Link) *
+                  </label>
+                  <div style="display: flex; gap: 0.5rem;">
+                    <input type="url" id="res-video-url" class="form-control" required placeholder="https://youtube.com/shorts/..." />
+                    <button type="button" class="btn btn-secondary" onclick="testVideoLink()" title="Open video in new tab">Test Link</button>
+                  </div>
+                  <span style="font-size: 0.72rem; color: var(--text-muted);">
+                    When clinicians or visitors click "Video Walkthrough", this link will open.
+                  </span>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 1.25rem;">
+                  <label class="form-label" for="res-landing-url" data-i18n="res_lbl_landing_url">Landing Page Portal URL *</label>
+                  <div style="display: flex; gap: 0.5rem;">
+                    <input type="text" id="res-landing-url" class="form-control" required placeholder="/dashboard/landing.html" />
+                    <a href="/dashboard/landing.html" target="_blank" class="btn btn-secondary" data-i18n="res_btn_open_portal">Open Portal</a>
+                  </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 1.25rem;">
+                  <label class="form-label" for="res-apk-url">
+                    External / Direct APK Download URL (Overrides local file if specified)
+                  </label>
+                  <input type="text" id="res-apk-url" class="form-control" placeholder="/dashboard/assets/downloads/MedAssist-AI.apk" />
+                  <span style="font-size: 0.72rem; color: var(--text-muted);">
+                    Defaults to the locally uploaded /dashboard/assets/downloads/MedAssist-AI.apk package.
+                  </span>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
+                  <div class="form-group">
+                    <label class="form-label" for="res-thesis-en" data-i18n="res_label_thesis_en_url">Master Thesis PDF Path (English)</label>
+                    <input type="text" id="res-thesis-en" class="form-control" placeholder="/dashboard/assets/docs/Thesis_Master_GLAA_EN.pdf" />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="res-thesis-fr" data-i18n="res_label_thesis_fr_url">Master Thesis PDF Path (French)</label>
+                    <input type="text" id="res-thesis-fr" class="form-control" placeholder="/dashboard/assets/docs/Thesis_Master_GLAA_FR.pdf" />
+                  </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                  <label class="form-label" for="res-announcement" data-i18n="res_label_announcement">Platform Announcement / Broadcaster Notice</label>
+                  <textarea id="res-announcement" class="form-control" rows="2" placeholder="System maintenance or clinical updates..."></textarea>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span id="res-last-updated-text" style="font-size: 0.75rem; color: var(--text-muted);"></span>
+                  <button type="submit" class="btn btn-primary" id="btn-save-platform-settings">
+                    <span data-i18n="res_btn_save_resources">💾 Save Platform Resources</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- ── MODAL: RESET PASSWORD RESULT ──────────────────────────────────── -->
+  <div class="modal-overlay" id="modal-reset-pwd">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 style="font-size: 1.15rem; font-weight: 700;" data-i18n="pwd_reset_modal_title">Password Successfully Reset</h3>
+        <button class="modal-close" onclick="closeModal('modal-reset-pwd')">&times;</button>
+      </div>
+      <div class="modal-body" style="text-align: center;">
+        <span style="font-size: 2.5rem; display: block; margin-bottom: 0.5rem;">🔑</span>
+        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">
+          A new temporary password has been issued. The user will be required to change it immediately upon their next login:
+        </p>
+        <div style="background: rgba(7, 19, 36, 0.85); border: 1px dashed var(--teal-500); padding: 1rem; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; gap: 1rem;">
+          <code id="temp-pwd-display" style="font-size: 1.25rem; font-weight: 800; color: var(--teal-300); letter-spacing: 0.05em;">••••••••••••</code>
+          <button class="btn btn-sm btn-primary" onclick="copyTempPassword()" data-i18n="btn_copy">📋 Copy</button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" onclick="closeModal('modal-reset-pwd')" data-i18n="btn_done">Done</button>
+      </div>
+    </div>
+  </div>
+
+    <!-- Modal: Video Demo -->
+  <div class="modal-overlay" id="modal-admin-video">
+    <div class="modal-card" style="max-width: 720px;">
+      <div class="modal-header">
+        <span class="modal-title" data-i18n="modal_video_title">MedAssist AI — Official Video Demo</span>
+        <button class="modal-close" onclick="closeAdminVideoModal()">&times;</button>
+      </div>
+      <video id="admin-video-player" controls style="width: 100%; border-radius: var(--radius-md); max-height: 440px;" poster="/dashboard/assets/images/brand-identity.jpg">
+        <source src="/dashboard/assets/videos/demo-video.mp4" type="video/mp4" />
+        Your browser does not support video.
+      </video>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <!-- Scripts -->
+  <script src="/dashboard/assets/js/wilayas.js"></script>
+  <script src="/dashboard/assets/vendor/chart.min.js"></script>
+  <script src="/dashboard/assets/js/api.js?v=2.2"></script>
+  <script src="/dashboard/assets/js/charts.js?v=2.2"></script>
+  <script src="/dashboard/assets/js/i18n.js?v=2.3"></script>
+        <script>
+    // ── Global Auth Check & Resilient Auto-Login ──
+    let currentUser = null;
+
+    async function ensureAdminAuth() {
+      currentUser = window.api.getCurrentUser();
+      // Instant Synchronous Role Guard (Zero-latency redirection)
+      if (currentUser && currentUser.role === 'doctor') {
+        window.location.href = '/dashboard/doctor.html';
+        return null;
+      }
+      if (currentUser && currentUser.role && currentUser.role !== 'admin') {
+        window.location.href = '/dashboard/login.html';
+        return null;
+      }
+
+      let valid = false;
+      if (currentUser && window.api.token) {
+        try {
+          const me = await window.api.getMe();
+          if (me && me.role === 'admin') {
+            currentUser = me;
+            window.api.setCurrentUser(me);
+            valid = true;
+          } else if (me && me.role === 'doctor') {
+            window.location.href = '/dashboard/doctor.html';
+            return null;
+          }
+        } catch (_) {
+          valid = false;
+        }
+      }
+
+      if (!valid) {
+        window.location.href = '/dashboard/login.html';
+        return null;
+      }
+      return currentUser;
+    }
+
+    function setupAdminDetails(user) {
+      if (!user) return;
+      const el = document.getElementById('admin-user-name');
+      if (el) {
+        el.innerText = user.email || 'System Administrator';
+        el.removeAttribute('data-i18n');
+      }
+    }
+
+    function openModal(id) { 
+      const el = document.getElementById(id);
+      if (el) el.classList.add('active'); 
+    }
+    function closeModal(id) { 
+      const el = document.getElementById(id);
+      if (el) el.classList.remove('active'); 
+    }
+
+    // ── Tab Management & Smooth SPA History Navigation ──
+    window.currentAdminTab = 'overview';
+
+    function updateActiveTabHeaderTitle() {
+      const tabName = window.currentAdminTab || 'overview';
+      const lang = localStorage.getItem('medassist_lang') || 'en';
+
+      const titles = {
+        overview: {
+          en: ['Platform Administration', 'Governance, Clinician Credentialing & System Analytics'],
+          fr: ['Administration de la Plateforme', 'Gouvernance, validation des cliniciens & analytique système'],
+          ar: ['إدارة المنصة المركزية', 'الحوكمة واعتماد الأطباء وتحليلات النظام']
+        },
+        users: {
+          en: ['Clinicians & Users Management', 'Credential Verification, Account Status & Password Resets'],
+          fr: ['Gestion des Praticiens & Utilisateurs', 'Vérification des licences, statuts de compte & réinitialisations'],
+          ar: ['حوكمة الكوادر الطبية', 'التحقق من التراخيص وتفعيل الحسابات وإعادة تعيين كلمات المرور']
+        },
+        analytics: {
+          en: ['Regional & AI Analytics', 'National Epidemiological Trends, Model Concordance & Latency'],
+          fr: ['Analyses Régionales & IA', 'Tendances épidémiologiques nationales, concordance du modèle & latence'],
+          ar: ['التحليلات والوبائيات الإقليمية', 'المؤشرات الوبائية الوطنية وتطابق النموذج وسرعة الاستجابة']
+        },
+        audit: {
+          en: ['Security Audit Trail', 'Compliance, Access Logs & Administrative Traceability'],
+          fr: ["Piste d'Audit & Sécurité", 'Conformité réglementaire, journaux d’accès & traçabilité administrative'],
+          ar: ['سجل التدقيق والأمان', 'الامتثال الأمني وسجلات الوصول وتتبع العمليات الإدارية']
+        },
+        resources: {
+          en: ['Platform Resources Governance', 'Direct APK Deployment, Thesis PDFs & Live URLs'],
+          fr: ['Gouvernance des Ressources', 'Déploiement direct de l’APK, mémoires de master & liens officiels'],
+          ar: ['إدارة موارد وتحديثات المنصة', 'رفع وتحديث تطبيق الهاتف ومذكرات التخرج وروابط الفيديو']
+        },
+      };
+
+      if (titles[tabName]) {
+        const item = titles[tabName][lang] || titles[tabName].en;
+        const titleEl = document.getElementById('page-title');
+        const subEl = document.getElementById('page-subtitle');
+        if (titleEl) titleEl.innerText = item[0];
+        if (subEl) subEl.innerText = item[1];
+      }
+    }
+    window.updateActiveTabHeaderTitle = updateActiveTabHeaderTitle;
+
+    function switchTab(tabName, updateHash = true) {
+      if (!tabName) tabName = 'overview';
+      window.currentAdminTab = tabName;
+
+      document.querySelectorAll('.sidebar-item[data-tab]').forEach(el => {
+        el.classList.toggle('active', el.getAttribute('data-tab') === tabName);
+      });
+      document.querySelectorAll('.tab-pane').forEach(el => {
+        el.classList.toggle('active', el.id === 'tab-' + tabName);
+      });
+
+      if (updateHash && window.location.hash !== ('#' + tabName)) {
+        history.pushState({ tab: tabName }, '', '#' + tabName);
+      }
+
+      updateActiveTabHeaderTitle();
+
+      if (tabName === 'overview') loadOverview();
+      if (tabName === 'users') loadUsers();
+      if (tabName === 'analytics') loadAnalytics();
+      if (tabName === 'audit') loadAudit();
+      if (tabName === 'resources') loadAdminResources();
+    }
+
+    document.querySelectorAll('.sidebar-item[data-tab]').forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.preventDefault();
+        switchTab(item.getAttribute('data-tab'), true);
+      });
+    });
+
+    window.addEventListener('popstate', () => {
+      const hash = window.location.hash.replace('#', '') || 'overview';
+      switchTab(hash, false);
+    });
+
+    // ── Tab 1: Overview ──
+    async function loadOverview() {
+      try {
+        const stats = await window.api.getAdminStats();
+        const elUsers = document.getElementById('adm-total-users');
+        const elActive = document.getElementById('adm-active-docs');
+        const elPending = document.getElementById('adm-pending-docs');
+        const elAn = document.getElementById('adm-total-analyses');
+
+        if (elUsers) elUsers.innerText = stats.total_users;
+        if (elActive) elActive.innerText = stats.active_doctors;
+        if (elPending) elPending.innerText = stats.pending_verifications;
+        if (elAn) elAn.innerText = stats.total_analyses;
+
+        const pending = await window.api.listUsers({ status: 'pending_verification', page_size: 10 });
+        const tbody = document.getElementById('pending-users-tbody');
+        if (tbody) {
+          if (!pending.items || !pending.items.length) {
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);" data-i18n="adm_no_pending">${window.t('adm_no_pending', 'No pending doctor verification requests. All caught up!')}</td></tr>`;
+            return;
+          }
+
+          tbody.innerHTML = pending.items.map(u => {
+            const roleStr = u.profile && u.profile.doctor_type === 'specialist_dermatologist' ? window.t('role_specialist', 'Dermatologist Specialist') : window.t('role_gp', 'General Practitioner');
+            return `
+            <tr>
+              <td><b>${window.escapeHtml(u.email)}</b></td>
+              <td>${window.escapeHtml(u.profile ? u.profile.full_name : 'No Name')}</td>
+              <td>${roleStr}</td>
+              <td>${window.escapeHtml(u.profile ? (u.profile.license_number || 'N/A') + ' • ' + (u.profile.institution_name || 'Wilaya ' + u.profile.wilaya) : 'N/A')}</td>
+              <td>
+                <button class="btn btn-sm btn-primary" onclick="verifyUser('${u.id}')" data-i18n="btn_approve_activate">${window.t('btn_approve_activate', '✓ Approve & Activate')}</button>
+              </td>
+            </tr>
+          `;}).join('');
+          if (window.dashboardI18n) window.dashboardI18n.applyLanguage(window.dashboardI18n.currentLang);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    // ── Tab 2: Users Management ──
+    async function loadUsers() {
+      const filterEl = document.getElementById('user-filter-status');
+      const searchEl = document.getElementById('user-search-input');
+      const statusFilter = filterEl ? filterEl.value : '';
+      const search = searchEl ? searchEl.value.trim() : '';
+
+      const params = { page: 1, page_size: 50 };
+      if (statusFilter) params.status = statusFilter;
+      if (search) params.search = search;
+
+      try {
+        const res = await window.api.listUsers(params);
+        const tbody = document.getElementById('users-tbody');
+        if (!tbody) return;
+
+        if (!res.items || !res.items.length) {
+          tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted);" data-i18n="adm_no_accounts">${window.t('adm_no_accounts', 'No accounts found.')}</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = res.items.map(u => {
+          let statusBadge = `<span class="badge badge-active" data-i18n="status_active">${window.t('status_active', 'Active')}</span>`;
+          if (u.status === 'pending_verification') statusBadge = `<span class="badge badge-pending" data-i18n="status_pending">${window.t('status_pending', 'Pending')}</span>`;
+          if (u.status === 'suspended') statusBadge = `<span class="badge badge-suspended" data-i18n="status_suspended">${window.t('status_suspended', 'Suspended')}</span>`;
+
+          const isSelf = currentUser && u.id === currentUser.id;
+          const roleLabel = u.role === 'admin' ? window.t('role_superuser', 'Superuser') : window.t('role_doctor', 'Doctor');
+
+          return `
+            <tr>
+              <td><b>${window.escapeHtml(u.email)}</b></td>
+              <td>
+                <div><b>${window.escapeHtml(u.profile ? u.profile.full_name : 'N/A')}</b></div>
+                <span style="font-size: 0.75rem; color: var(--text-muted);">${roleLabel}</span>
+              </td>
+              <td>${window.escapeHtml(u.profile ? (u.profile.institution_name || '') + (u.profile.wilaya ? ' (W.' + u.profile.wilaya + ')' : '') : '—')}</td>
+              <td>${statusBadge}</td>
+              <td>${new Date(u.created_at).toLocaleDateString()}</td>
+              <td>
+                <div style="display: flex; gap: 0.4rem;">
+                  ${u.status === 'pending_verification' ? `
+                    <button class="btn btn-sm btn-primary" onclick="verifyUser('${u.id}')" data-i18n="btn_approve">${window.t('btn_approve', 'Approve')}</button>
+                  ` : ''}
+                  ${!isSelf && u.status === 'active' ? `
+                    <button class="btn btn-sm btn-danger" onclick="toggleStatus('${u.id}', 'suspended')" data-i18n="btn_suspend">${window.t('btn_suspend', 'Suspend')}</button>
+                  ` : ''}
+                  ${!isSelf && u.status === 'suspended' ? `
+                    <button class="btn btn-sm btn-secondary" onclick="toggleStatus('${u.id}', 'active')" data-i18n="btn_activate">${window.t('btn_activate', 'Activate')}</button>
+                  ` : ''}
+                  ${!isSelf ? `
+                    <button class="btn btn-sm btn-secondary" onclick="resetPwd('${u.id}')" data-i18n="btn_reset_pwd">${window.t('btn_reset_pwd', 'Reset Pwd')}</button>
+                  ` : ''}
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+        if (window.dashboardI18n) window.dashboardI18n.applyLanguage(window.dashboardI18n.currentLang);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    const userFilterStatus = document.getElementById('user-filter-status');
+    if (userFilterStatus) userFilterStatus.addEventListener('change', loadUsers);
+
+    const userSearchInput = document.getElementById('user-search-input');
+    if (userSearchInput) {
+      userSearchInput.addEventListener('input', () => {
+        clearTimeout(window._userSearchDebounce);
+        window._userSearchDebounce = setTimeout(loadUsers, 300);
+      });
+    }
+
+    async function verifyUser(userId) {
+      try {
+        await window.api.verifyDoctor(userId);
+        window.showToast('Doctor account verified and activated!', 'success');
+        loadOverview();
+        if (document.getElementById('tab-users').classList.contains('active')) loadUsers();
+      } catch (err) {
+        window.showToast(err.message, 'error');
+      }
+    }
+
+    async function toggleStatus(userId, status) {
+      try {
+        await window.api.updateUserStatus(userId, status);
+        window.showToast(`User status set to ${status}`, 'success');
+        loadUsers();
+      } catch (err) {
+        window.showToast(err.message, 'error');
+      }
+    }
+
+    async function resetPwd(userId) {
+      if (!confirm('Are you sure you want to reset this user\'s password? A temporary password will be generated.')) return;
+      try {
+        const res = await window.api.resetUserPassword(userId);
+        document.getElementById('temp-pwd-display').innerText = res.temporary_password;
+        openModal('modal-reset-pwd');
+      } catch (err) {
+        window.showToast(err.message, 'error');
+      }
+    }
+
+    function copyTempPassword() {
+      const pwd = document.getElementById('temp-pwd-display').innerText;
+      navigator.clipboard.writeText(pwd).then(() => {
+        window.showToast('Temporary password copied to clipboard!', 'success');
+      });
+    }
+
+    // ── Tab 3: Analytics ──
+    async function loadAnalytics() {
+      try {
+        const data = await window.api.getAdminAnalytics();
+        const elConc = document.getElementById('an-concordance');
+        const elLat = document.getElementById('an-latency');
+
+        if (elConc) elConc.innerText = `${data.model_concordance_rate_percentage}%`;
+        if (elLat) elLat.innerText = `${data.average_inference_time_ms} ms`;
+
+        if (window.charts) {
+          window.charts.renderWilayaBarChart('chart-wilayas', data.geographical_distribution || {});
+          window.charts.renderDiagnosisDonut('chart-admin-diagnoses', data.diagnostic_class_distribution || {});
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    // ── Tab 4: Audit Trail ──
+    async function loadAudit() {
+      const filterInput = document.getElementById('audit-action-filter');
+      const action = filterInput ? filterInput.value.trim() : '';
+      const params = { page: 1, page_size: 50 };
+      if (action) params.action = action;
+
+      try {
+        const res = await window.api.getAuditLogs(params);
+        const tbody = document.getElementById('audit-tbody');
+        if (!tbody) return;
+
+        if (!res.items || !res.items.length) {
+          tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);" data-i18n="adm_no_audit">${window.t('adm_no_audit', 'No audit entries recorded.')}</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = res.items.map(l => `
+          <tr>
+            <td>${new Date(l.created_at).toLocaleString()}</td>
+            <td><b>${window.escapeHtml(l.action)}</b></td>
+            <td><code>${window.escapeHtml(l.resource_type)}${l.resource_id ? ':' + window.escapeHtml(l.resource_id.slice(0, 8)) : ''}</code></td>
+            <td><code>${window.escapeHtml(l.user_id ? l.user_id.slice(0, 8) + '...' : 'System')}</code></td>
+            <td>${window.escapeHtml(l.ip_address || 'Internal')}</td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    const auditActionFilter = document.getElementById('audit-action-filter');
+    if (auditActionFilter) {
+      auditActionFilter.addEventListener('input', () => {
+        clearTimeout(window._auditSearchDebounce);
+        window._auditSearchDebounce = setTimeout(loadAudit, 300);
+      });
+    }
+
+    // ── Tab 5: Admin Platform Resources, APK & Thesis Deployment ──
+    let selectedApkFile = null;
+    let selectedThesisEnFile = null;
+    let selectedThesisFrFile = null;
+
+    async function loadAdminResources() {
+      try {
+        const res = await window.api.getPlatformResources();
+        
+        const vInput = document.getElementById('res-video-url');
+        const lInput = document.getElementById('res-landing-url');
+        const aInput = document.getElementById('res-apk-url');
+        const tenInput = document.getElementById('res-thesis-en');
+        const tfrInput = document.getElementById('res-thesis-fr');
+        const annInput = document.getElementById('res-announcement');
+        const updatedSpan = document.getElementById('res-last-updated-text');
+
+        if (vInput) vInput.value = res.video_walkthrough_url || '';
+        if (lInput) lInput.value = res.landing_page_url || '';
+        if (aInput) aInput.value = res.mobile_apk_url || '';
+        if (tenInput) tenInput.value = res.thesis_en_url || '';
+        if (tfrInput) tfrInput.value = res.thesis_fr_url || '';
+        if (annInput) annInput.value = res.announcement || '';
+        if (updatedSpan && res.updated_at) {
+          updatedSpan.innerText = `Last updated: ${new Date(res.updated_at).toLocaleString()} by ${res.updated_by || 'Admin'}`;
+        }
+
+        const dispName = document.getElementById('apk-disp-name');
+        const dispSize = document.getElementById('apk-disp-size');
+        const dispDate = document.getElementById('apk-disp-date');
+        const testDlBtn = document.getElementById('apk-active-download-btn');
+        const sidebarVideo = document.getElementById('admin-sidebar-video-link');
+
+        if (dispName) dispName.innerText = res.apk_original_name || 'MedAssist-AI.apk';
+        if (dispSize) dispSize.innerText = res.apk_file_size || '55.57 MB';
+        if (dispDate) dispDate.innerText = res.apk_uploaded_at ? new Date(res.apk_uploaded_at).toLocaleDateString() : (res.updated_at ? new Date(res.updated_at).toLocaleDateString() : 'Active');
+        if (testDlBtn && res.mobile_apk_url) testDlBtn.href = res.mobile_apk_url;
+        if (sidebarVideo && res.video_walkthrough_url) sidebarVideo.href = res.video_walkthrough_url;
+
+        // Thesis Badges & Test Links
+        const enSizeBadge = document.getElementById('thesis-en-size-badge');
+        const frSizeBadge = document.getElementById('thesis-fr-size-badge');
+        const enDlTest = document.getElementById('thesis-en-dl-test');
+        const frDlTest = document.getElementById('thesis-fr-dl-test');
+
+        if (enSizeBadge && res.thesis_en_size) enSizeBadge.innerText = res.thesis_en_size;
+        if (frSizeBadge && res.thesis_fr_size) frSizeBadge.innerText = res.thesis_fr_size;
+        if (enDlTest && res.thesis_en_url) enDlTest.href = res.thesis_en_url;
+        if (frDlTest && res.thesis_fr_url) frDlTest.href = res.thesis_fr_url;
+
+      } catch (err) {
+        console.error('Error loading admin resources:', err);
+      }
+    }
+
+    // APK Dropzone
+    const apkDropzone = document.getElementById('apk-dropzone');
+    const apkInput = document.getElementById('apk-file-input');
+    const btnDeployApk = document.getElementById('btn-deploy-apk');
+    const apkFileInfo = document.getElementById('apk-file-info');
+    const apkFileName = document.getElementById('apk-file-name');
+    const apkFileSize = document.getElementById('apk-file-size');
+
+    if (apkDropzone && apkInput) {
+      apkDropzone.addEventListener('click', (e) => {
+        if (e.target !== btnDeployApk) apkInput.click();
+      });
+      apkDropzone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        apkDropzone.style.borderColor = 'var(--teal-400)';
+      });
+      apkDropzone.addEventListener('dragleave', () => {
+        apkDropzone.style.borderColor = 'var(--border-glass)';
+      });
+      apkDropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        apkDropzone.style.borderColor = 'var(--border-glass)';
+        if (e.dataTransfer.files.length) {
+          handleApkSelected(e.dataTransfer.files[0]);
+        }
+      });
+      apkInput.addEventListener('change', () => {
+        if (apkInput.files.length) {
+          handleApkSelected(apkInput.files[0]);
+        }
+      });
+    }
+
+    function handleApkSelected(file) {
+      if (!file.name.toLowerCase().endsWith('.apk')) {
+        window.showToast('Please select a valid Android .apk file', 'error');
+        return;
+      }
+      selectedApkFile = file;
+      if (apkFileName) apkFileName.innerText = file.name;
+      if (apkFileSize) apkFileSize.innerText = `(${(file.size / (1024 * 1024)).toFixed(2)} MB)`;
+      if (apkFileInfo) apkFileInfo.style.display = 'block';
+      if (btnDeployApk) {
+        btnDeployApk.disabled = false;
+        btnDeployApk.innerText = `🚀 Deploy & Replace (${(file.size / (1024 * 1024)).toFixed(2)} MB)`;
+      }
+    }
+
+    if (btnDeployApk) {
+      btnDeployApk.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        if (!selectedApkFile) return;
+
+        btnDeployApk.disabled = true;
+        btnDeployApk.innerText = 'Uploading APK & Deploying...';
+
+        try {
+          const res = await window.api.uploadApk(selectedApkFile);
+          window.showToast(`New APK deployed successfully! (${res.apk_file_size || 'Updated'})`, 'success');
+          selectedApkFile = null;
+          if (apkFileInfo) apkFileInfo.style.display = 'none';
+          if (apkInput) apkInput.value = '';
+          btnDeployApk.innerText = '<span data-i18n="res_btn_deploy_apk">🚀 Deploy & Replace APK</span>';
+          await loadAdminResources();
+          if (typeof window.syncPlatformResources === 'function') {
+            window.syncPlatformResources();
+          }
+        } catch (err) {
+          window.showToast(err.message || 'Failed to deploy APK', 'error');
+          btnDeployApk.disabled = false;
+          btnDeployApk.innerText = 'Retry Deploying APK';
+        }
+      });
+    }
+
+    // Thesis EN Upload
+    const thesisEnInput = document.getElementById('thesis-en-input');
+    const btnUploadThesisEn = document.getElementById('btn-upload-thesis-en');
+    const thesisEnLabel = document.getElementById('thesis-en-selected-name');
+
+    if (thesisEnInput && btnUploadThesisEn) {
+      thesisEnInput.addEventListener('change', () => {
+        if (thesisEnInput.files.length) {
+          const file = thesisEnInput.files[0];
+          if (!file.name.toLowerCase().endsWith('.pdf')) {
+            window.showToast('Please select a PDF document', 'error');
+            return;
+          }
+          selectedThesisEnFile = file;
+          thesisEnLabel.innerText = `${file.name} (${(file.size / (1024 * 1024)).toFixed(2)} MB)`;
+          thesisEnLabel.style.display = 'block';
+          btnUploadThesisEn.disabled = false;
+        }
+      });
+
+      btnUploadThesisEn.addEventListener('click', async () => {
+        if (!selectedThesisEnFile) return;
+        btnUploadThesisEn.disabled = true;
+        btnUploadThesisEn.innerText = 'Uploading...';
+        try {
+          const res = await window.api.uploadThesis(selectedThesisEnFile, 'en');
+          window.showToast('English Thesis PDF deployed successfully!', 'success');
+          selectedThesisEnFile = null;
+          thesisEnLabel.style.display = 'none';
+          btnUploadThesisEn.innerText = '⬆ Upload EN';
+          await loadAdminResources();
+          if (typeof window.syncPlatformResources === 'function') window.syncPlatformResources();
+        } catch (err) {
+          window.showToast(err.message || 'Failed to upload English thesis', 'error');
+          btnUploadThesisEn.disabled = false;
+          btnUploadThesisEn.innerText = 'Retry Upload';
+        }
+      });
+    }
+
+    // Thesis FR Upload
+    const thesisFrInput = document.getElementById('thesis-fr-input');
+    const btnUploadThesisFr = document.getElementById('btn-upload-thesis-fr');
+    const thesisFrLabel = document.getElementById('thesis-fr-selected-name');
+
+    if (thesisFrInput && btnUploadThesisFr) {
+      thesisFrInput.addEventListener('change', () => {
+        if (thesisFrInput.files.length) {
+          const file = thesisFrInput.files[0];
+          if (!file.name.toLowerCase().endsWith('.pdf')) {
+            window.showToast('Veuillez sélectionner un fichier PDF', 'error');
+            return;
+          }
+          selectedThesisFrFile = file;
+          thesisFrLabel.innerText = `${file.name} (${(file.size / (1024 * 1024)).toFixed(2)} MB)`;
+          thesisFrLabel.style.display = 'block';
+          btnUploadThesisFr.disabled = false;
+        }
+      });
+
+      btnUploadThesisFr.addEventListener('click', async () => {
+        if (!selectedThesisFrFile) return;
+        btnUploadThesisFr.disabled = true;
+        btnUploadThesisFr.innerText = 'Téléversement...';
+        try {
+          const res = await window.api.uploadThesis(selectedThesisFrFile, 'fr');
+          window.showToast('Mémoire de Master en Français déployé avec succès!', 'success');
+          selectedThesisFrFile = null;
+          thesisFrLabel.style.display = 'none';
+          btnUploadThesisFr.innerText = '⬆ Téléverser FR';
+          await loadAdminResources();
+          if (typeof window.syncPlatformResources === 'function') window.syncPlatformResources();
+        } catch (err) {
+          window.showToast(err.message || 'Échec du téléversement', 'error');
+          btnUploadThesisFr.disabled = false;
+          btnUploadThesisFr.innerText = 'Réessayer';
+        }
+      });
+    }
+
+        // QR Code SVG Upload Logic
+    let selectedQrFile = null;
+    const qrFileInput = document.getElementById('qr-file-input');
+    const btnDeployQr = document.getElementById('btn-deploy-qr');
+    const qrFileLabel = document.getElementById('qr-file-selected-name');
+    const qrPreviewImg = document.getElementById('admin-qr-preview-img');
+
+    if (qrFileInput && btnDeployQr) {
+      qrFileInput.addEventListener('change', () => {
+        if (qrFileInput.files.length) {
+          const file = qrFileInput.files[0];
+          if (!file.name.toLowerCase().endsWith('.svg')) {
+            window.showToast('Please select a vector SVG file (.svg)', 'error');
+            qrFileInput.value = '';
+            selectedQrFile = null;
+            btnDeployQr.disabled = true;
+            if (qrFileLabel) qrFileLabel.style.display = 'none';
+            return;
+          }
+          selectedQrFile = file;
+          if (qrFileLabel) {
+            qrFileLabel.innerText = `${file.name} (${(file.size / 1024).toFixed(2)} KB)`;
+            qrFileLabel.style.display = 'block';
+          }
+          btnDeployQr.disabled = false;
+        }
+      });
+
+      btnDeployQr.addEventListener('click', async () => {
+        if (!selectedQrFile) return;
+        btnDeployQr.disabled = true;
+        btnDeployQr.innerText = 'Uploading SVG...';
+        try {
+          const res = await window.api.uploadQrCode(selectedQrFile);
+          window.showToast('Vector SVG QR code deployed successfully!', 'success');
+          selectedQrFile = null;
+          if (qrFileLabel) qrFileLabel.style.display = 'none';
+          btnDeployQr.innerText = '🚀 Upload & Replace QR Code';
+          if (qrPreviewImg) {
+            qrPreviewImg.src = '/dashboard/assets/images/qr-code.svg?t=' + Date.now();
+          }
+          if (typeof window.syncPlatformResources === 'function') {
+            window.syncPlatformResources();
+          }
+        } catch (err) {
+          window.showToast(err.message || 'Failed to upload QR code', 'error');
+          btnDeployQr.disabled = false;
+          btnDeployQr.innerText = 'Retry Upload';
+        }
+      });
+    }
+
+    // Save platform URL settings
+    const adminResForm = document.getElementById('admin-resources-form');
+    if (adminResForm) {
+      adminResForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const payload = {
+          video_walkthrough_url: document.getElementById('res-video-url').value.trim(),
+          landing_page_url: document.getElementById('res-landing-url').value.trim(),
+          mobile_apk_url: document.getElementById('res-apk-url').value.trim() || undefined,
+          thesis_en_url: document.getElementById('res-thesis-en').value.trim() || undefined,
+          thesis_fr_url: document.getElementById('res-thesis-fr').value.trim() || undefined,
+          announcement: document.getElementById('res-announcement').value.trim() || undefined,
+        };
+
+        try {
+          await window.api.updatePlatformResources(payload);
+          window.showToast('Platform resources saved and synchronized across all dashboards!', 'success');
+          await loadAdminResources();
+          if (typeof window.syncPlatformResources === 'function') {
+            window.syncPlatformResources();
+          }
+        } catch (err) {
+          window.showToast(err.message || 'Failed to save resources', 'error');
+        }
+      });
+    }
+
+    function testVideoLink() {
+      const url = document.getElementById('res-video-url').value.trim();
+      if (url) window.open(url, '_blank');
+    }
+
+    // Dynamic Tab Translation on Language Switch
+    window.refreshActiveTabLanguage = function(lang) {
+      updateActiveTabHeaderTitle();
+      const activePane = document.querySelector('.tab-pane.active');
+      if (!activePane) return;
+      const tabId = activePane.id.replace('tab-', '');
+      if (tabId === 'analytics' && typeof loadAnalytics === 'function') {
+        loadAnalytics();
+      } else if (tabId === 'overview' && typeof loadOverview === 'function') {
+        loadOverview();
+      } else if (tabId === 'users' && typeof loadUsers === 'function') {
+        loadUsers();
+      } else if (tabId === 'audit' && typeof loadAudit === 'function') {
+        loadAudit();
+      } else if (tabId === 'resources' && typeof loadAdminResources === 'function') {
+        loadAdminResources();
+      }
+    };
+
+    // ── Startup & Lifecycle Orchestration ──
+    (async function init() {
+      try {
+        const u = await ensureAdminAuth();
+        if (u) {
+          setupAdminDetails(u);
+          await loadOverview();
+        }
+      } catch (err) {
+        console.error('Admin initialization error:', err);
+      }
+
+      if (typeof window.syncPlatformResources === 'function') {
+        window.syncPlatformResources();
+      }
+
+      const initialHash = window.location.hash.replace('#', '');
+      if (initialHash && initialHash !== 'overview') {
+        setTimeout(() => switchTab(initialHash, false), 50);
+      }
+    })();
+  </script>
+</body>
+</html>
+

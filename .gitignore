@@ -53,3 +53,11 @@ Thumbs.db
 
 # ── Docker ────────────────────────────────────────────────
 .dockerignore
+
+# Documentation
+docs_v2/
+
+# Binaries & Local Uploads
+cloudflared.exe
+uploads/
+

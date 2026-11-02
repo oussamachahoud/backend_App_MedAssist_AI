@@ -213,6 +213,10 @@ class ModelService:
         return self._is_loaded
 
     @property
+    def model(self) -> Optional[torch.nn.Module]:
+        return self._model
+
+    @property
     def device(self) -> torch.device:
         return self._device
 
@@ -242,10 +246,10 @@ class ModelService:
             meta_mask : np.ndarray of shape (7,) — 1.0 if provided, 0.0 if imputed
         """
         imp = self._imputer or {}
-        numeric_medians = imp.get("numeric_medians", {"age": 52.0, "diameter_1": 1.5})
+        numeric_medians = imp.get("numeric_medians", {"age": 63.0, "diameter_1": 8.2})
         binary_modes    = imp.get("binary_modes",    {
-            "gender": 1.0, "grew": 0.0, "bleed": 0.0,
-            "skin_cancer_history": 0.0, "elevation": 0.0,
+            "gender": 0.0, "grew": 1.0, "bleed": 0.0,
+            "skin_cancer_history": 0.0, "elevation": 1.0,
         })
 
         # Map sex string → binary gender value

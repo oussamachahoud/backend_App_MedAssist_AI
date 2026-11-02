@@ -17,6 +17,7 @@ class DiagnosticLabel(str, Enum):
     BCC = "BCC"   # Basal Cell Carcinoma     — malignant
     SCC = "SCC"   # Squamous Cell Carcinoma  — malignant
     MEL = "MEL"   # Melanoma                 — highly malignant
+    UNKNOWN = "UNKNOWN"
 
 
 class DiagnosticLabelFull(str, Enum):
@@ -27,6 +28,7 @@ class DiagnosticLabelFull(str, Enum):
     BCC = "Basal Cell Carcinoma"
     SCC = "Squamous Cell Carcinoma"
     MEL = "Melanoma"
+    UNKNOWN = "Unknown Lesion"
 
 
 LABEL_FULL_NAME: dict[str, str] = {
@@ -36,6 +38,7 @@ LABEL_FULL_NAME: dict[str, str] = {
     "BCC": "Basal Cell Carcinoma",
     "SCC": "Squamous Cell Carcinoma",
     "MEL": "Melanoma",
+    "UNKNOWN": "Unknown Lesion",
 }
 
 
@@ -69,20 +72,23 @@ class RiskLevel(str, Enum):
     Clinical risk level derived from predicted diagnosis + confidence.
 
     Mapping logic:
-        LOW      → NEV, SEK  (benign)
-        MODERATE → ACK        (pre-malignant / watch & wait)
-        HIGH     → BCC, SCC  (malignant, treatment required)
-        CRITICAL → MEL        (aggressive, urgent referral)
+        LOW          → NEV, SEK  (benign)
+        MODERATE     → ACK        (pre-malignant / watch & wait)
+        HIGH         → BCC, SCC  (malignant, treatment required)
+        CRITICAL     → MEL        (aggressive, urgent referral)
+        INCONCLUSIVE → Low confidence (< 50%) requiring specialist verification
     """
-    LOW      = "LOW"
-    MODERATE = "MODERATE"
-    HIGH     = "HIGH"
-    CRITICAL = "CRITICAL"
+    LOW          = "LOW"
+    MODERATE     = "MODERATE"
+    HIGH         = "HIGH"
+    CRITICAL     = "CRITICAL"
+    INCONCLUSIVE = "INCONCLUSIVE"
 
 
 RISK_COLOR: dict[RiskLevel, str] = {
-    RiskLevel.LOW:      "#22c55e",   # green
-    RiskLevel.MODERATE: "#f59e0b",   # amber
-    RiskLevel.HIGH:     "#ef4444",   # red
-    RiskLevel.CRITICAL: "#7c3aed",   # purple
+    RiskLevel.LOW:          "#22c55e",   # green
+    RiskLevel.MODERATE:     "#f59e0b",   # amber
+    RiskLevel.HIGH:         "#ef4444",   # red
+    RiskLevel.CRITICAL:     "#7c3aed",   # purple
+    RiskLevel.INCONCLUSIVE: "#64748b",   # slate / gray warning
 }

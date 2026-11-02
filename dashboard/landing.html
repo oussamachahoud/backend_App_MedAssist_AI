@@ -1,0 +1,718 @@
+﻿<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MedAssist AI — Smarter Healthcare Solutions | حلول ذكية لتشخيص الأمراض الجلدية</title>
+  <meta name="description" content="MedAssist AI is a clinical-grade multimodal AI platform for skin lesion diagnosis using smartphone cameras, built under Algerian Ministerial Decree 1275. Official Site: /dashboard/landing.html" />
+  <meta name="keywords" content="MedAssist AI, skin disease diagnosis, dermatology AI, multimodal AI, Gated Cross-Attention, Arrêté 1275, Skikda University, EfficientNet-B3" />
+  <meta name="author" content="Oussama Chahoud, Abderrahmane Laidi Sista" />
+  <meta property="og:title" content="MedAssist AI — Smarter Healthcare Solutions" />
+  <meta property="og:description" content="AI-powered skin disease diagnosis from your smartphone camera. Faster vision, accurate diagnosis, better care." />
+  <meta property="og:image" content="/dashboard//dashboard/assets/images/brand-identity.jpg" />
+  <meta property="og:type" content="website" />
+  <link rel="icon" type="image/jpeg" href="/dashboard//dashboard/assets/images/app-icon.jpg" />
+  <link rel="stylesheet" href="/dashboard/assets/css/landing.css" />
+</head>
+<body>
+
+  <!-- Neural Network Background Canvas -->
+  <canvas id="neural-canvas"></canvas>
+
+  <!-- ========== NAVIGATION ========== -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-content">
+      <a href="#hero" class="nav-logo">
+        <img src="/dashboard/assets/images/app-icon.jpg" alt="MedAssist AI Logo" />
+        <div class="nav-logo-wrap">
+          <span class="nav-logo-text">MedAssist AI</span>
+          <span class="nav-logo-sub" data-en="Smarter Healthcare" data-ar="رؤية أسرع • تشخيص أدق">Smarter Healthcare</span>
+        </div>
+      </a>
+
+      <div class="nav-links" id="navLinks">
+        <a href="#about" data-en="About" data-ar="حول المنصة">About</a>
+        <a href="#how-it-works" data-en="How It Works" data-ar="كيف يعمل">How It Works</a>
+        <a href="#features" data-en="Features" data-ar="المميزات">Features</a>
+        <a href="#screenshots" data-en="Screenshots" data-ar="واجهات التطبيق">Screenshots</a>
+        <a href="#demo" data-en="Demo & Media" data-ar="العرض والمرئيات">Demo & Media</a>
+        <a href="#academic" data-en="Academic Research" data-ar="المشروع الأكاديمي">Academic Research</a>
+        <a href="#team" data-en="Team" data-ar="الفريق">Team</a>
+        <a href="#download" class="nav-btn-highlight" data-en="Download APK" data-ar="تحميل التطبيق">Download APK</a>
+        <a href="/dashboard/login.html" class="nav-btn-highlight" style="background: linear-gradient(135deg, #00c9a7, #008f75); border-color: #00c9a7; margin-left: 0.35rem;" data-en="🩺 Clinician Portal" data-ar="🩺 البوابة الطبية">🩺 Clinician Portal</a>
+      </div>
+
+      <div class="nav-actions">
+        <div class="lang-toggle" id="langToggle" title="Toggle Language (EN / FR / عربي)">
+          <button class="lang-btn active" data-lang="en" id="btnEn">EN</button>
+          <button class="lang-btn" data-lang="fr" id="btnFr">FR</button>
+          <button class="lang-btn" data-lang="ar" id="btnAr">عربي</button>
+        </div>
+        <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle navigation menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ========== HERO SECTION ========== -->
+  <section class="hero" id="hero">
+    <div class="container">
+      <div class="hero-content">
+        <div class="hero-text">
+          <div class="hero-badge">
+            <span class="badge-dot"></span>
+            <span data-en="Multimodal AI Dermatology Platform" data-ar="منصة الذكاء الاصطناعي متعدد الوسائط لتشخيص الجلد">Multimodal AI Dermatology Platform</span>
+          </div>
+
+          <h1 class="hero-title">
+            <span data-en="Smarter Skin" data-ar="رؤية أسرع .. تشخيص أدق">Smarter Skin</span><br/>
+            <span class="highlight" data-en="Diagnosis with AI" data-ar="رعاية أفضل بالذكاء الاصطناعي">Diagnosis with AI</span>
+          </h1>
+
+          <p class="hero-subtitle" data-en="MedAssist AI leverages Gated Cross-Attention deep learning to analyze skin lesions from smartphone cameras alongside 7 clinical metadata features — delivering instant, reliable diagnostic support." data-ar="يجمع MedAssist AI بين تحليل صور الآفات الجلدية بكاميرا الهاتف والبيانات السريرية للمريض عبر آلية الانتباه المتقاطع المحمي ببوابة (Gated Cross-Attention) لتقديم تشخيص سريري فوري ودقيق.">
+            MedAssist AI leverages Gated Cross-Attention deep learning to analyze skin lesions from smartphone cameras alongside 7 clinical metadata features — delivering instant, reliable diagnostic support.
+          </p>
+
+          <div class="hero-slogan-pill">
+            <span class="slogan-icon">🩺</span>
+            <span data-en="Faster Vision • More Accurate Diagnosis • Better Care" data-ar="رؤية أسرع .. تشخيص ادق .. رعاية أفضل">Faster Vision • More Accurate Diagnosis • Better Care</span>
+          </div>
+
+          <div class="hero-actions">
+            <a href="#download" class="btn btn-primary">
+              <span class="btn-icon">⬇</span>
+              <span data-en="Download App (APK)" data-ar="تحميل التطبيق (APK)">Download App (APK)</span>
+            </a>
+            <a href="/dashboard/login.html" class="btn btn-secondary" style="border-color: rgba(0, 201, 167, 0.6); color: #00c9a7;">
+              <span class="btn-icon">🩺</span>
+              <span data-en="Enter Clinician Portal" data-ar="دخول البوابة السريرية">Enter Clinician Portal</span>
+            </a>
+            <a href="#demo" class="btn btn-secondary">
+              <span class="btn-icon">▶</span>
+              <span data-en="Watch Demo" data-ar="شاهد العرض المرئي">Watch Demo</span>
+            </a>
+          </div>
+
+          <div class="hero-metrics-strip">
+            <div class="metric-mini">
+              <span class="metric-num">74.31%</span>
+              <span class="metric-lbl" data-en="Test Accuracy" data-ar="دقة النموذج">Test Accuracy</span>
+            </div>
+            <div class="metric-sep"></div>
+            <div class="metric-mini">
+              <span class="metric-num">6,581</span>
+              <span class="metric-lbl" data-en="Unified Clinical Images" data-ar="صورة سريرية موحدة">Unified Clinical Images</span>
+            </div>
+            <div class="metric-sep"></div>
+            <div class="metric-mini">
+              <span class="metric-num">&lt;1.5s</span>
+              <span class="metric-lbl" data-en="p95 Response Latency" data-ar="زمن الاستجابة">p95 Response Latency</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-visual">
+          <div class="phone-mockup">
+            <div class="phone-glow"></div>
+            <div class="phone-frame">
+              <div class="phone-speaker"></div>
+              <img src="/dashboard/assets/images/screenshot-home.jpg" alt="MedAssist AI Home Screen" />
+            </div>
+
+            <!-- Floating cards around phone -->
+            <div class="float-card card-accuracy">
+              <div class="float-card-icon green">🎯</div>
+              <div>
+                <div class="float-card-label" data-en="Accuracy" data-ar="الدقة المعتمدة">Accuracy</div>
+                <div class="float-card-value">74.31%</div>
+              </div>
+            </div>
+
+            <div class="float-card card-speed">
+              <div class="float-card-icon blue">⚡</div>
+              <div>
+                <div class="float-card-label" data-en="Inference Latency" data-ar="زمن الاستدلال">Inference Latency</div>
+                <div class="float-card-value">1.32s / 307ms</div>
+              </div>
+            </div>
+
+            <div class="float-card card-ai">
+              <div class="float-card-icon purple">🧠</div>
+              <div>
+                <div class="float-card-label" data-en="Fusion Architecture" data-ar="المعمارية العصبية">Fusion Architecture</div>
+                <div class="float-card-value">Gated Cross-Attn</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="scroll-indicator">
+      <a href="#about" aria-label="Scroll to explore">
+        <div class="scroll-mouse"></div>
+        <span data-en="Scroll to explore" data-ar="مرر للاستكشاف">Scroll to explore</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- ========== ABOUT SECTION ========== -->
+  <section class="about" id="about">
+    <div class="container">
+      <div class="section-header reveal">
+        <div class="section-tag">
+          <span>💡</span>
+          <span data-en="About The Platform" data-ar="نبذة عن المنصة">About The Platform</span>
+        </div>
+        <h2 class="section-title" data-en="What is MedAssist AI?" data-ar="ما هو مشروع MedAssist AI؟">What is MedAssist AI?</h2>
+        <p class="section-desc" data-en="The first Algerian academic project leveraging Multimodal Deep Learning with Gated Cross-Attention to bridge the gap between AI research and practical telemedicine." data-ar="أول مشروع أكاديمي جزائري يعتمد على التعلم العميق متعدد الوسائط عبر آلية الانتباه المتقاطع المحمي ببوابة (Gated Cross-Attention) لسد الفجوة بين الأبحاث النظرية والتطبيق السريري الفعلي في الطب الاتصالي.">
+          The first Algerian academic project leveraging Multimodal Deep Learning with Gated Cross-Attention to bridge the gap between AI research and practical telemedicine.
+        </p>
+      </div>
+
+      <div class="about-grid">
+        <div class="about-card reveal reveal-delay-1">
+          <div class="about-card-icon">📱</div>
+          <h3 class="about-card-title" data-en="Smartphone-Based Telemedicine" data-ar="مبني خصيصاً للهواتف الذكية">Smartphone-Based Telemedicine</h3>
+          <p class="about-card-desc" data-en="Eliminates reliance on costly dermatoscopes. Clinicians and patients can capture clinical photographs directly using standard smartphone cameras under realistic conditions." data-ar="يلغي الحاجة لأجهزة فحص الجلد باهظة الثمن. يمكن للأطباء والمستخدمين التقاط صور الآفات مباشرة بكاميرا الهاتف الذكي مع مراعاة ظروف الإضاءة الحقيقية.">
+            Eliminates reliance on costly dermatoscopes. Clinicians and patients can capture clinical photographs directly using standard smartphone cameras under realistic conditions.
+          </p>
+        </div>
+
+        <div class="about-card reveal reveal-delay-2">
+          <div class="about-card-icon">🧠</div>
+          <h3 class="about-card-title" data-en="Multimodal Gated Fusion" data-ar="دمج ذكي متعدد الوسائط">Multimodal Gated Fusion</h3>
+          <p class="about-card-desc" data-en="Unlike image-only models, MedAssist AI correlates visual features with 7 standardized clinical variables (age, sex, location, diameter, bleeding, growth, history) via Gated Cross-Attention." data-ar="بخلاف النماذج التي تكتفي بالصورة، يربط MedAssist AI المعالم البصرية بـ 7 متغيرات سريرية قياسية (العمر، الجنس، الموقع، القطر، التطور، النزيف، التاريخ العائلي) لتوجيه دقيق للقرار.">
+            Unlike image-only models, MedAssist AI correlates visual features with 7 standardized clinical variables (age, sex, location, diameter, bleeding, growth, history) via Gated Cross-Attention.
+          </p>
+        </div>
+
+        <div class="about-card reveal reveal-delay-3">
+          <div class="about-card-icon">📋</div>
+          <h3 class="about-card-title" data-en="Clinical Triage & PDF Reports" data-ar="تصنيف مخاطر وتقارير PDF">Clinical Triage & PDF Reports</h3>
+          <p class="about-card-desc" data-en="Implements a 4-tier clinical risk escalation protocol (LOW, MODERATE, HIGH, CRITICAL) and instantly generates exportable PDF diagnostic reports for electronic medical records." data-ar="يوفر بروتوكول أمان سريري بـ 4 مستويات خطورة (منخفض، متوسط، مرتفع، حرج) مع ميزة إنشاء وتصدير تقارير طبية شاملة بصيغة PDF قابلة للحفظ والمشاركة.">
+            Implements a 4-tier clinical risk escalation protocol (LOW, MODERATE, HIGH, CRITICAL) and instantly generates exportable PDF diagnostic reports for electronic medical records.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== HOW IT WORKS ========== -->
+  <section class="how-it-works" id="how-it-works">
+    <div class="container">
+      <div class="section-header reveal">
+        <div class="section-tag">
+          <span>⚙️</span>
+          <span data-en="Clinical Workflow" data-ar="سير العمل السريري">Clinical Workflow</span>
+        </div>
+        <h2 class="section-title" data-en="Simple 4-Step Diagnosis" data-ar="تشخيص دقيق في 4 خطوات بسيطة">Simple 4-Step Diagnosis</h2>
+        <p class="section-desc" data-en="An intuitive guided workflow designed for rapid consultation in under 2 minutes." data-ar="سير عمل استرشادي سلس صُمم لإجراء الفحص الطبي في أقل من دقيقتين.">
+          An intuitive guided workflow designed for rapid consultation in under 2 minutes.
+        </p>
+      </div>
+
+      <div class="steps-container">
+        <div class="step reveal reveal-delay-1">
+          <div class="step-number">1</div>
+          <div class="step-icon">📸</div>
+          <h3 class="step-title" data-en="Guided Capture" data-ar="التقاط موجه">Guided Capture</h3>
+          <p class="step-desc" data-en="Capture or upload the skin lesion using our circular centering overlay with real-time illumination assistance." data-ar="التقط صورة الآفة الجلدية أو ارفعها من المعرض عبر إطار توجيه دائري يساعد على ضبط البؤرة والإضاءة.">
+            Capture or upload the skin lesion using our circular centering overlay with real-time illumination assistance.
+          </p>
+        </div>
+
+        <div class="step reveal reveal-delay-2">
+          <div class="step-number">2</div>
+          <div class="step-icon">📝</div>
+          <h3 class="step-title" data-en="Clinical Metadata" data-ar="البيانات السريرية">Clinical Metadata</h3>
+          <p class="step-desc" data-en="Fill 7 structured parameters: age, sex, lesion location, diameter, bleeding, recent growth, and cancer history." data-ar="أدخل 7 متغيرات سريرية قياسية: العمر، الجنس، الموضع، القطر بالمليمتر، النزيف، التطور الحديث، والتاريخ العائلي.">
+            Fill 7 structured parameters: age, sex, lesion location, diameter, bleeding, recent growth, and cancer history.
+          </p>
+        </div>
+
+        <div class="step reveal reveal-delay-3">
+          <div class="step-number">3</div>
+          <div class="step-icon">🤖</div>
+          <h3 class="step-title" data-en="Multimodal Fusion" data-ar="المعالجة والدمج الذكي">Multimodal Fusion</h3>
+          <p class="step-desc" data-en="EfficientNet-B3 extracts 49 visual patches while the MLP branch processes metadata via Gated Cross-Attention." data-ar="يستخرج نموذج EfficientNet-B3 رقع الصورة (49 Patches) وتدمج شبكة MLP البيانات السريرية عبر آلية الانتباه المتقاطع.">
+            EfficientNet-B3 extracts 49 visual patches while the MLP branch processes metadata via Gated Cross-Attention.
+          </p>
+        </div>
+
+        <div class="step reveal reveal-delay-4">
+          <div class="step-number">4</div>
+          <div class="step-icon">📊</div>
+          <h3 class="step-title" data-en="Triage & PDF Report" data-ar="النتيجة والتقرير السريري">Triage & PDF Report</h3>
+          <p class="step-desc" data-en="Review class probabilities, color-coded clinical risk level, actionable next steps, and download the full PDF." data-ar="احصل على التشخيص مع توزيع الاحتمالات ومستوى الخطورة الملون وتوصيات المتابعة مع خيار تنزيل التقرير بصيغة PDF.">
+            Review class probabilities, color-coded clinical risk level, actionable next steps, and download the full PDF.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== FEATURES ========== -->
+  <section class="features" id="features">
+    <div class="container">
+      <div class="section-header reveal">
+        <div class="section-tag">
+          <span>✨</span>
+          <span data-en="Platform Capabilities" data-ar="إمكانيات المنصة">Platform Capabilities</span>
+        </div>
+        <h2 class="section-title" data-en="Engineered for Healthcare Rigor" data-ar="مصمم بأعلى معايير الرعاية الصحية">Engineered for Healthcare Rigor</h2>
+        <p class="section-desc" data-en="Combining advanced deep learning, medical safety safeguards, and modern software engineering." data-ar="دمج دقيق بين أحدث تقنيات الذكاء الاصطناعي وضمانات السلامة الطبية وهندسة البرمجيات الحديثة.">
+          Combining advanced deep learning, medical safety safeguards, and modern software engineering.
+        </p>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-card reveal reveal-delay-1">
+          <div class="feature-icon">🔬</div>
+          <div class="feature-info">
+            <h3 class="feature-title" data-en="6 Skin Lesion Pathologies" data-ar="تصنيف 6 أمراض جلدية رئيسية">6 Skin Lesion Pathologies</h3>
+            <p class="feature-desc" data-en="Classifies Actinic Keratosis (ACK), Basal Cell Carcinoma (BCC), Melanoma (MEL), Nevus (NEV), Squamous Cell Carcinoma (SCC), and Seborrheic Keratosis (SEK)." data-ar="يميز بدقة بين: التقرن السفعي (ACK)، سرطان الخلايا القاعدية (BCC)، الورم الميلانيني (MEL)، الشامات (NEV)، سرطان الخلايا الحرشفية (SCC)، والتقرن الدهني (SEK).">
+              Classifies Actinic Keratosis (ACK), Basal Cell Carcinoma (BCC), Melanoma (MEL), Nevus (NEV), Squamous Cell Carcinoma (SCC), and Seborrheic Keratosis (SEK).
+            </p>
+          </div>
+        </div>
+
+        <div class="feature-card reveal reveal-delay-2">
+          <div class="feature-icon">🎯</div>
+          <div class="feature-info">
+            <h3 class="feature-title" data-en="Optimal Calibrated Thresholds" data-ar="عتبات قرار محسنة سريرياً">Optimal Calibrated Thresholds</h3>
+            <p class="feature-desc" data-en="Replaces naive argmax with pathology-specific optimal thresholds (θc) to recalibrate precision-recall trade-offs for lethal conditions like Melanoma." data-ar="استبدال أسلوب الترجيح التقليدي بعتبات اتخاذ قرار مخصصة لكل مرض (θc) لتعزيز حساسية الكشف عن الأورام الخبيثة مثل الميلانوما.">
+              Replaces naive argmax with pathology-specific optimal thresholds (θc) to recalibrate precision-recall trade-offs for lethal conditions like Melanoma.
+            </p>
+          </div>
+        </div>
+
+        <div class="feature-card reveal reveal-delay-1">
+          <div class="feature-icon">🛡️</div>
+          <div class="feature-info">
+            <h3 class="feature-title" data-en="Automated Safety Escalation" data-ar="آلية تصعيد الأمان السريري">Automated Safety Escalation</h3>
+            <p class="feature-desc" data-en="If prediction confidence falls below 50%, the safety engine automatically bumps the clinical risk level by one tier and mandates manual dermatologist review." data-ar="عندما تقل ثقة التنبؤ عن 50%، يرفع محرك الأمان تصنيف الخطورة تلقائياً بمقدار درجة مع تنبيه صريح بضرورة الفحص اليدوي المباشر.">
+              If prediction confidence falls below 50%, the safety engine automatically bumps the clinical risk level by one tier and mandates manual dermatologist review.
+            </p>
+          </div>
+        </div>
+
+        <div class="feature-card reveal reveal-delay-2">
+          <div class="feature-icon">📚</div>
+          <div class="feature-info">
+            <h3 class="feature-title" data-en="ABCDE Educational Module" data-ar="وحدة تعليمية تفاعلية لقاعدة ABCDE">ABCDE Educational Module</h3>
+            <p class="feature-desc" data-en="Interactive clinical guide teaching physicians and patients the international ABCDE rule (Asymmetry, Border, Color, Diameter, Evolution) for early skin cancer detection." data-ar="دليل تفاعلي متكامل لتدريب الأطباء والمستخدمين على قاعدة ABCDE العالمية (عدم التناظر، الحدود، اللون، القطر، والتطور) للاكتشاف المبكر.">
+              Interactive clinical guide teaching physicians and patients the international ABCDE rule (Asymmetry, Border, Color, Diameter, Evolution) for early skin cancer detection.
+            </p>
+          </div>
+        </div>
+
+        <div class="feature-card reveal reveal-delay-1">
+          <div class="feature-icon">📄</div>
+          <div class="feature-info">
+            <h3 class="feature-title" data-en="Exportable PDF Medical Dossier" data-ar="تقارير طبية شاملة بصيغة PDF">Exportable PDF Medical Dossier</h3>
+            <p class="feature-desc" data-en="Generates complete, standardized PDF diagnostic summaries with full probability bars, risk badges, patient metadata, and medical disclaimer." data-ar="تصدير ملف تشخيصي شامل بصيغة PDF يتضمن الصورة، البيانات السريرية، شريط الاحتمالات، تصنيف الخطورة، والتوصيات الرسمية.">
+              Generates complete, standardized PDF diagnostic summaries with full probability bars, risk badges, patient metadata, and medical disclaimer.
+            </p>
+          </div>
+        </div>
+
+        <div class="feature-card reveal reveal-delay-2">
+          <div class="feature-icon">🔒</div>
+          <div class="feature-info">
+            <h3 class="feature-title" data-en="Privacy & Zero Data Leakage" data-ar="خصوصية وأمان بيانات المرضى">Privacy & Zero Data Leakage</h3>
+            <p class="feature-desc" data-en="Strict adherence to GDPR data minimization: images and clinical data are processed strictly in volatile memory (RAM) and never permanently stored on servers." data-ar="التزام كامل بمبدأ تقليل البيانات وفق معايير GDPR: تتم معالجة الصور والبيانات في الذاكرة المؤقتة (RAM) دون أي تخزين دائم على الخوادم.">
+              Strict adherence to GDPR data minimization: images and clinical data are processed strictly in volatile memory (RAM) and never permanently stored on servers.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== SCREENSHOTS SHOWCASE ========== -->
+  <section class="screenshots" id="screenshots">
+    <div class="container">
+      <div class="section-header reveal">
+        <div class="section-tag">
+          <span>📱</span>
+          <span data-en="Mobile Interface" data-ar="واجهات التطبيق">Mobile Interface</span>
+        </div>
+        <h2 class="section-title" data-en="Explore the Mobile Application" data-ar="استكشف واجهات تطبيق MedAssist AI">Explore the Mobile Application</h2>
+        <p class="section-desc" data-en="A native Flutter application built with ergonomic medical UI, guiding users from capture to clinical report." data-ar="تطبيق فلاتر أصيل صُمم بواجهات طبية مدروسة تقود المستخدم بسلاسة من التقاط الصورة إلى صدور التقرير.">
+          A native Flutter application built with ergonomic medical UI, guiding users from capture to clinical report.
+        </p>
+      </div>
+
+      <div class="screenshots-showcase reveal">
+        <div class="screenshot-item" data-index="0">
+          <div class="phone-frame">
+            <div class="phone-speaker"></div>
+            <img src="/dashboard/assets/images/screenshot-home.jpg" alt="MedAssist AI Home Dashboard" />
+          </div>
+          <div class="screenshot-label">
+            <span class="screen-title" data-en="Home Dashboard" data-ar="الشاشة الرئيسية">Home Dashboard</span>
+            <span class="screen-sub" data-en="Capture, upload & fast access" data-ar="التقاط، رفع ووصول سريع">Capture, upload & fast access</span>
+          </div>
+        </div>
+
+        <div class="screenshot-item active" data-index="1">
+          <div class="phone-frame">
+            <div class="phone-speaker"></div>
+            <img src="/dashboard/assets/images/screenshot-clinical.jpg" alt="Clinical Form Input" />
+          </div>
+          <div class="screenshot-label">
+            <span class="screen-title" data-en="Clinical Data Form" data-ar="استمارة البيانات السريرية">Clinical Data Form</span>
+            <span class="screen-sub" data-en="7 standardized ABCDE features" data-ar="7 متغيرات وفق معايير ABCDE">7 standardized ABCDE features</span>
+          </div>
+        </div>
+
+        <div class="screenshot-item" data-index="2">
+          <div class="phone-frame">
+            <div class="phone-speaker"></div>
+            <img src="/dashboard/assets/images/screenshot-results.jpg" alt="Diagnostic Results & Triage" />
+          </div>
+          <div class="screenshot-label">
+            <span class="screen-title" data-en="Diagnostic Results" data-ar="نتائج التشخيص السريري">Diagnostic Results</span>
+            <span class="screen-sub" data-en="Triage, probabilities & PDF export" data-ar="تصنيف الخطورة وتصدير الـ PDF">Triage, probabilities & PDF export</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Carousel Pagination Controls -->
+      <div class="carousel-controls">
+        <button class="carousel-dot active" data-target="0" aria-label="Slide 1"></button>
+        <button class="carousel-dot" data-target="1" aria-label="Slide 2"></button>
+        <button class="carousel-dot" data-target="2" aria-label="Slide 3"></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== DEMO VIDEO & MEDIA SHOWCASE ========== -->
+  <section class="demo" id="demo">
+    <div class="container">
+      <div class="section-header reveal">
+        <div class="section-tag">
+          <span>🎬</span>
+          <span data-en="Demonstration & Media" data-ar="العرض والمرئيات">Demonstration & Media</span>
+        </div>
+        <h2 class="section-title" data-en="Watch MedAssist AI in Action" data-ar="شاهد MedAssist AI أثناء العمل">Watch MedAssist AI in Action</h2>
+        <p class="section-desc" data-en="Explore the mobile application walkthrough video and official 3D brand identity motion." data-ar="شاهد فيديو الاستعراض العملي للتطبيق والهوية البصرية الرسمية ثلاثية الأبعاد للمشروع.">
+          Explore the mobile application walkthrough video and official 3D brand identity motion.
+        </p>
+
+        <!-- Media Switcher Tabs -->
+        <div class="media-tabs">
+          <button class="media-tab-btn active" id="tabAppWalkthrough" data-tab="walkthrough">
+            <span>📱</span>
+            <span data-en="App Walkthrough Video" data-ar="فيديو استعراض التطبيق">App Walkthrough Video</span>
+          </button>
+          <button class="media-tab-btn" id="tabBrandMotion" data-tab="brand">
+            <span>✨</span>
+            <span data-en="3D Brand Identity" data-ar="الهوية البصرية ثلاثية الأبعاد">3D Brand Identity</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Tab Content 1: App Walkthrough (YouTube Shorts) -->
+      <div class="media-content-pane active" id="paneWalkthrough">
+        <div class="vertical-video-wrapper reveal">
+          <div class="phone-frame video-phone-frame" id="videoPhoneCard">
+            <div class="phone-speaker"></div>
+            
+            <!-- Video Poster Card (Direct YouTube Shorts Launch) -->
+            <div class="video-poster-preview" id="videoPosterPreview">
+              <img src="/dashboard/assets/images/app-icon.jpg" alt="MedAssist AI Walkthrough Preview" class="poster-bg" id="landing-video-poster" onerror="this.src='/dashboard/assets/images/app-icon.jpg'" />
+              <div class="poster-overlay">
+                <div class="yt-badge">
+                  <svg width="22" height="16" viewBox="0 0 28 20" fill="#FF0000"><path d="M27.4 3.1c-.3-1.2-1.3-2.1-2.5-2.4C22.7 0 14 0 14 0S5.3 0 3.1.7C1.9 1 1 1.9.6 3.1 0 5.3 0 10 0 10s0 4.7.6 6.9c.3 1.2 1.3 2.1 2.5 2.4 2.2.7 10.9.7 10.9.7s8.7 0 10.9-.7c1.2-.3 2.2-1.2 2.5-2.4.6-2.2.6-6.9.6-6.9s0-4.7-.6-6.9z"/><polygon fill="#FFFFFF" points="11.2,14.3 18.5,10 11.2,5.7"/></svg>
+                  <span>YouTube Shorts</span>
+                </div>
+                
+                <a href="https://youtube.com/shorts/tRxtxYG6B8c?si=AkQqDnujgsMIfaL2" target="_blank" rel="noopener noreferrer" id="landing-video-play-link" class="play-btn-circle" title="Play Video on YouTube" aria-label="Play on YouTube">
+                  <span class="play-pulse-ring"></span>
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
+                    <polygon points="8,5 19,12 8,19" />
+                  </svg>
+                </a>
+                
+                <div class="poster-text">
+                  <span class="poster-title" data-en="Click to watch full demo" data-ar="انقر للمشاهدة على YouTube Shorts">Click to watch full demo</span>
+                  <span class="poster-duration" data-en="Vertical Demo • 1:42" data-ar="استعراض رأسي • 1:42">Vertical Demo • 1:42</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="video-caption">
+            <h4 data-en="Full Mobile Consultation Workflow" data-ar="سير الفحص السريري الكامل على الهاتف">Full Mobile Consultation Workflow</h4>
+            <p data-en="Guided acquisition, metadata submission, inference execution, and PDF generation demonstrated on a physical smartphone." data-ar="استعراض عملي لالتقاط الصورة، إدخال المتغيرات، تنفيذ الاستدلال الفوري، وتوليد تقرير الـ PDF.">
+              Guided acquisition, metadata submission, inference execution, and PDF generation demonstrated on a physical smartphone.
+            </p>
+            <div class="video-actions-row">
+              <a id="landing-video-action-link" href="https://youtube.com/shorts/tRxtxYG6B8c?si=AkQqDnujgsMIfaL2" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+                <span>▶</span>
+                <span data-en="Watch on YouTube Shorts" data-ar="مشاهدة على YouTube Shorts">Watch on YouTube Shorts</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Content 2: 3D Brand Identity Video -->
+      <div class="media-content-pane" id="paneBrand">
+        <div class="demo-wrapper reveal">
+          <video controls playsinline poster="/dashboard/assets/images/brand-identity.jpg" preload="metadata" id="brandVideo">
+            <source src="/dashboard/assets/videos/demo-video.mp4" type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
+          <div class="brand-video-caption">
+            <h4 data-en="Official 3D Motion Brand Identity" data-ar="الهوية البصرية الرسمية ثلاثية الأبعاد">Official 3D Motion Brand Identity</h4>
+            <p data-en="Medical Caduceus fused with Neural Network profile — Symbolizing technology serving human health." data-ar="اندماج شعار الطب (عصا أسكليبيوس) مع ملامح الشبكة العصبية الذكية — رمزية تسخير التكنولوجيا لصحة الإنسان.">
+              Medical Caduceus fused with Neural Network profile — Symbolizing technology serving human health.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== ACADEMIC / MASTER'S THESIS SECTION ========== -->
+  <section class="academic" id="academic">
+    <div class="container">
+      <div class="academic-container reveal">
+        <div class="academic-badge-top">
+          <span class="badge-icon">🏛️</span>
+          <span data-en="University 20 Août 1955 – Skikda • Faculty of Sciences • Computer Science Department" data-ar="جامعة 20 أوت 1955 - سكيكدة • كلية العلوم • قسم الإعلام الآلي">University 20 Août 1955 – Skikda • Faculty of Sciences • Computer Science Department</span>
+        </div>
+
+        <div class="academic-grid">
+          <div class="academic-info">
+            <div class="decree-tag">
+              <span>📜</span>
+              <span data-en="Ministerial Decree No. 1275 — University Degree / Startup Label" data-ar="في إطار القرار الوزاري رقم 1275 — شهادة جامعية / مؤسسة ناشئة">Ministerial Decree No. 1275 — University Degree / Startup Label</span>
+            </div>
+
+            <h2 class="academic-main-title" data-en="Academic Master's Thesis & Innovative Startup" data-ar="مذكرة ماستر أكاديمي ومشروع مؤسسة ناشئة مبتكرة">Academic Master's Thesis & Innovative Startup</h2>
+
+            <p class="academic-thesis-name" data-en="« Design and Implementation of a Medical Diagnostic Support Platform Based on Multimodal AI via the Cloud and Deployment on Mobile Platform: Case of Skin Cancers »" data-ar="« تصميم وتنفيذ منصة لدعم التشخيص الطبي تعتمد على الذكاء الاصطناعي متعدد الوسائط عبر السحابة ونشرها على الهاتف المحمول: حالة سرطانات الجلد »">
+              « Design and Implementation of a Medical Diagnostic Support Platform Based on Multimodal AI via the Cloud and Deployment on Mobile Platform: Case of Skin Cancers »
+            </p>
+
+            <p class="academic-desc-text" data-en="Option: Advanced Software Engineering and Applications (GLAA). Developed under the dual perspective of rigorous scientific contribution and market-ready clinical telemedicine deployment." data-ar="تخصص: هندسة البرمجيات المتقدمة وتطبيقاتها (GLAA). أُنجز المشروع برؤية مزدوجة تجمع بين الرصانة العلمية الأكاديمية والجاهزية التقنية لنشر المنصة كمنتج سريري حقيقي.">
+              Option: Advanced Software Engineering and Applications (GLAA). Developed under the dual perspective of rigorous scientific contribution and market-ready clinical telemedicine deployment.
+            </p>
+
+            <div class="academic-supervision-box">
+              <div class="supervision-item">
+                <span class="sup-label" data-en="Supervised by:" data-ar="إشراف:">Supervised by:</span>
+                <span class="sup-val">Dr. KERRAOUI Sara (د. قراوي سارة)</span>
+              </div>
+              <div class="supervision-item">
+                <span class="sup-label" data-en="Academic Year:" data-ar="السنة الجامعية:">Academic Year:</span>
+                <span class="sup-val">2025 / 2026</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="academic-card-stats">
+            <div class="academic-stat-box">
+              <span class="stat-highlight">74.31%</span>
+              <span class="stat-title" data-en="Unified Benchmark Accuracy" data-ar="دقة الاختبار المستقل">Unified Benchmark Accuracy</span>
+              <span class="stat-detail" data-en="Tested on 654 independent samples (Zero-Leakage)" data-ar="على عينة مستقلة من 654 حالة (بدون تسرب بيانات)">Tested on 654 independent samples (Zero-Leakage)</span>
+            </div>
+
+            <div class="academic-stat-box">
+              <span class="stat-highlight">0.7315</span>
+              <span class="stat-title" data-en="Macro F1-Score" data-ar="درجة Macro F1">Macro F1-Score</span>
+              <span class="stat-detail" data-en="+11.65 points gain over unimodal visual model" data-ar="+11.65 نقطة تفوق مقارنة بالنموذج البصري الأحادي">+11.65 points gain over unimodal visual model</span>
+            </div>
+
+            <div class="academic-stat-box">
+              <span class="stat-highlight">6,581</span>
+              <span class="stat-title" data-en="Master Dataset Size" data-ar="حجم قاعدة البيانات الموحدة">Master Dataset Size</span>
+              <span class="stat-detail" data-en="PAD-UFES-20 + ISIC 2019 + MCR-SL (3,364 patients)" data-ar="دمج 3 قواعد بيانات سريرية موحدة (3,364 مريض)">PAD-UFES-20 + ISIC 2019 + MCR-SL (3,364 patients)</span>
+            </div>
+
+            <div class="academic-stat-box">
+              <span class="stat-highlight">1.47s</span>
+              <span class="stat-title" data-en="p95 End-to-End Latency" data-ar="زمن الاستجابة الاسمي (p95)">p95 End-to-End Latency</span>
+              <span class="stat-detail" data-en="FastAPI Docker Container (TTAx8 enabled)" data-ar="خادم FastAPI في حاوية Docker مع تعزيز TTAx8">FastAPI Docker Container (TTAx8 enabled)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Thesis Downloads -->
+        <div style="margin: 1.5rem 0; display: flex; gap: 1rem; flex-wrap: wrap;">
+          <a href="/dashboard/assets/docs/Thesis_Master_GLAA_EN.pdf" download id="res-thesis-en-link" data-resource="thesis-en" class="btn btn-secondary" style="font-size: 0.85rem; padding: 0.6rem 1.2rem; border-color: rgba(0, 201, 167, 0.5);">
+            📄 <span data-en="Download Master Thesis (English PDF)" data-fr="Télécharger le Mémoire (Anglais - PDF)" data-ar="تحميل مذكرة التخرج (الإنجليزية - PDF)">Download Master Thesis (English PDF)</span>
+          </a>
+          <a href="/dashboard/assets/docs/Thesis_Master_GLAA_FR.pdf" download id="res-thesis-fr-link" data-resource="thesis-fr" class="btn btn-secondary" style="font-size: 0.85rem; padding: 0.6rem 1.2rem; border-color: rgba(0, 201, 167, 0.5);">
+            📄 <span data-en="Download Master Thesis (French PDF)" data-fr="Télécharger le Mémoire (Français - PDF)" data-ar="تحميل مذكرة التخرج (الفرنسية - PDF)">Download Master Thesis (French PDF)</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== TEAM SECTION ========== -->
+  <section class="team" id="team">
+    <div class="container">
+      <div class="section-header reveal">
+        <div class="section-tag">
+          <span>👥</span>
+          <span data-en="Research & Development Team" data-ar="فريق البحث والتطوير">Research & Development Team</span>
+        </div>
+        <h2 class="section-title" data-en="Meet The Innovators" data-ar="تعرف على مطوري المشروع">Meet The Innovators</h2>
+        <p class="section-desc" data-en="Master students in Advanced Software Engineering & Applications (GLAA) — University 20 Août 1955 Skikda." data-ar="طلبة ماستر هندسة البرمجيات المتقدمة وتطبيقاتها (GLAA) — جامعة 20 أوت 1955 سكيكدة.">
+          Master students in Advanced Software Engineering & Applications (GLAA) — University 20 Août 1955 Skikda.
+        </p>
+      </div>
+
+      <div class="team-grid">
+        <!-- Developer 1: Oussama Chahoud -->
+        <div class="team-card reveal reveal-delay-1">
+          <div class="team-avatar">OC</div>
+          <h3 class="team-name" data-en="Oussama Chahoud" data-ar="أسامة شحود">Oussama Chahoud</h3>
+          <p class="team-role" data-en="Software Engineer & AI Researcher" data-ar="مهندس برمجيات وباحث ذكاء اصطناعي">Software Engineer & AI Researcher</p>
+          <p class="team-subtext" data-en="Master GLAA • University 20 Août 1955 Skikda" data-ar="ماستر GLAA • جامعة 20 أوت 1955 سكيكدة">Master GLAA • University 20 Août 1955 Skikda</p>
+          <a href="https://github.com/oussamachahoud" target="_blank" class="team-github" rel="noopener noreferrer">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+            <span>@oussamachahoud</span>
+          </a>
+        </div>
+
+        <!-- Developer 2: Abderrahmane Laidisista -->
+        <div class="team-card reveal reveal-delay-2">
+          <div class="team-avatar">AL</div>
+          <h3 class="team-name" data-en="Abderrahmane Laidi Sista" data-ar="عبد الرحمان العايدي سيستا">Abderrahmane Laidi Sista</h3>
+          <p class="team-role" data-en="Software Engineer & AI Researcher" data-ar="مهندس برمجيات وباحث ذكاء اصطناعي">Software Engineer & AI Researcher</p>
+          <p class="team-subtext" data-en="Master GLAA • University 20 Août 1955 Skikda" data-ar="ماستر GLAA • جامعة 20 أوت 1955 سكيكدة">Master GLAA • University 20 Août 1955 Skikda</p>
+          <a href="https://github.com/Abderrahmane-Laidisista" target="_blank" class="team-github" rel="noopener noreferrer">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+            <span>@Abderrahmane-Laidisista</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== DOWNLOAD SECTION ========== -->
+  <section class="download" id="download">
+    <div class="container">
+      <div class="download-card reveal">
+        <div class="download-badge">
+          <span>🚀</span>
+          <span data-en="Android APK Release v1.0" data-ar="نسخة أندرويد الرسمية v1.0">Android APK Release v1.0</span>
+        </div>
+
+        <h2 class="download-title" data-en="Experience MedAssist AI on Your Android Device" data-ar="حمّل تطبيق MedAssist AI مباشرة على جهازك">Experience MedAssist AI on Your Android Device</h2>
+
+        <p class="download-desc">
+          <span data-en="Download the standalone APK directly or scan the QR code to visit the official site and install:" data-ar="حمّل ملف APK مباشرة بنقرة واحدة أو امسح رمز الـ QR لزيارة الموقع الرسمي والتثبيت:">Download the standalone APK directly or scan the QR code to visit the official site and install:</span>
+          <a href="/dashboard/landing.html" id="desc-site-link" data-resource="landing" class="desc-site-link">MedAssist AI Portal</a>
+        </p>
+
+        <div class="download-showcase-grid">
+          <!-- Left: Direct Action Button & Specs -->
+          <div class="download-cta-block">
+            <a href="/dashboard/assets/downloads/MedAssist-AI.apk" download="MedAssist-AI.apk" class="download-btn" id="downloadBtn">
+              <span class="btn-icon">
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor"><path d="M17.523 2.476a.5.5 0 0 0-.836-.37L14.5 4.197a.5.5 0 0 0 .336.873H16V7h-3.5a.5.5 0 0 0-.5.5v2.044a.5.5 0 0 0 .146.354l1.854 1.854V16.5a.5.5 0 0 0 .5.5h2a.5.5 0 0 0 .5-.5v-4.748a.5.5 0 0 0-.146-.354L15 9.544V8h1.836a.5.5 0 0 0 .336-.873l2.187-2.091a.5.5 0 0 0-.836-.37V2.476zM6.477 2.476a.5.5 0 0 1 .836-.37L9.5 4.197a.5.5 0 0 1-.336.873H8V7h3.5a.5.5 0 0 1 .5.5v2.044a.5.5 0 0 1-.146.354L9.999 11.752V16.5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1-.5-.5v-4.748a.5.5 0 0 1 .146-.354L9 9.544V8H7.164a.5.5 0 0 1-.336-.873L4.641 5.036a.5.5 0 0 1 .836-.37V2.476zM3 19h18v2H3v-2z"/></svg>
+              </span>
+              <div class="download-btn-text">
+                <span class="main-txt" data-en="Download APK Direct" data-ar="تحميل ملف الـ APK مباشرة">Download APK Direct</span>
+                <span class="sub-txt" data-en="MedAssist-AI.apk • ~58 MB • Android 8.0+" data-ar="MedAssist-AI.apk • ~58 ميغا • أندرويد 8.0+">MedAssist-AI.apk • ~58 MB • Android 8.0+</span>
+              </div>
+            </a>
+
+            <div class="download-meta-tags">
+              <span class="meta-pill">📦 <span data-en="Size: ~58 MB" data-ar="الحجم: ~58 ميغابايت">Size: ~58 MB</span></span>
+              <span class="meta-pill">📱 <span data-en="Android 8.0+ (ARM64)" data-ar="أندرويد 8.0 فما فوق">Android 8.0+ (ARM64)</span></span>
+              <span class="meta-pill">🛡️ <span data-en="Verified Clean & Safe" data-ar="آمن ومفحوص 100%">Verified Clean & Safe</span></span>
+            </div>
+
+            <!-- Install guide steps -->
+            <div class="install-steps">
+              <h4 data-en="How to Install:" data-ar="طريقة التثبيت السريعة:">How to Install:</h4>
+              <ol>
+                <li data-en="Click download or scan QR code on mobile." data-ar="اضغط زر التحميل أعلاه أو امسح رمز الـ QR بهاتفك.">Click download or scan QR code on mobile.</li>
+                <li data-en="Allow installation from unknown sources if prompted." data-ar="وافق على التثبيت من هذا المصدر عند ظهور المطالبة.">Allow installation from unknown sources if prompted.</li>
+                <li data-en="Launch MedAssist AI and start diagnosing!" data-ar="افتح التطبيق وابدأ التشخيص السريري الفوري!">Launch MedAssist AI and start diagnosing!</li>
+              </ol>
+            </div>
+          </div>
+
+          <!-- Right: High Resolution QR Code -->
+          <div class="download-qr-block">
+            <div class="qr-container">
+              <img src="/dashboard/assets/images/qr-code.svg" id="landing-qr-image" alt="QR Code - Download MedAssist AI APK" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Medical Disclaimer -->
+        <div class="medical-disclaimer-box">
+          <span class="disc-icon">⚠️</span>
+          <p data-en="Clinical Disclaimer: MedAssist AI is designed as an assistive triage decision-support platform under academic research and does not replace in-person consultation with a board-certified dermatologist." data-ar="إخلاء مسؤولية سريري: تم تصميم MedAssist AI كمنصة مساعدة لدعم القرار والتصنيف السريري الأولي ضمن إطار بحثي، ولا يحل محل الاستشارة المباشرة لطبيب أمراض جلدية مختص.">
+            Clinical Disclaimer: MedAssist AI is designed as an assistive triage decision-support platform under academic research and does not replace in-person consultation with a board-certified dermatologist.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== FOOTER ========== -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-logo">
+          <img src="/dashboard/assets/images/app-icon.jpg" alt="MedAssist AI" />
+          <div class="footer-logo-text-group">
+            <span class="footer-logo-text">MedAssist AI</span>
+            <span class="footer-sub-text" data-en="Smarter Healthcare Solutions" data-ar="رؤية أسرع .. تشخيص ادق .. رعاية أفضل">Smarter Healthcare Solutions</span>
+          </div>
+        </div>
+
+        <p class="footer-copy" data-en="© 2026 MedAssist AI. All rights reserved. Master Thesis GLAA — University 20 Août 1955 Skikda (Decree 1275)." data-ar="© 2026 MedAssist AI. جميع الحقوق محفوظة. مذكرة ماستر GLAA — جامعة 20 أوت 1955 سكيكدة (القرار الوزاري 1275).">
+          © 2026 MedAssist AI. All rights reserved. Master Thesis GLAA — University 20 Août 1955 Skikda (Decree 1275).
+        </p>
+
+        <div class="footer-links">
+          <a href="/dashboard/landing.html" id="footer-landing-link" data-resource="landing">🌐 Live Site</a>
+          <a href="https://github.com/oussamachahoud" target="_blank" rel="noopener noreferrer">@oussamachahoud</a>
+          <a href="https://github.com/Abderrahmane-Laidisista" target="_blank" rel="noopener noreferrer">@Abderrahmane-Laidisista</a>
+          <a href="https://youtube.com/shorts/tRxtxYG6B8c?si=AkQqDnujgsMIfaL2" target="_blank" rel="noopener noreferrer">YouTube Demo</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+    <script src="/dashboard/assets/js/api.js?v=2.2"></script>
+  <script src="/dashboard/assets/js/landing.js?v=2.2"></script>
+  <script>
+    // Sync dynamic platform resources configured by admin
+    fetch('/api/v1/public/platform-resources')
+      .then(r => r.json())
+      .then(res => {
+        if (!res) return;
+        if (res.mobile_apk_url) {
+          document.querySelectorAll('a[download*="MedAssist-AI.apk"]').forEach(el => el.href = res.mobile_apk_url);
+        }
+        if (res.video_walkthrough_url) {
+          document.querySelectorAll('a[href*="youtube.com"]').forEach(el => el.href = res.video_walkthrough_url);
+        }
+      })
+      .catch(() => {});
+  </script>
+  <script>
+    // Dynamic platform resources synchronization
+    document.addEventListener('DOMContentLoaded', () => {
+      if (typeof window.syncPlatformResources === 'function') {
+        window.syncPlatformResources();
+      }
+    });
+  </script>
+</body>
+</html>
