@@ -17,3 +17,4 @@ echo "=========================================================="
 
 # Execute the main container command (e.g. uvicorn)
 exec "$@"
+

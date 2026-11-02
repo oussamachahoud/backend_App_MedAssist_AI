@@ -6,7 +6,7 @@
 [![MinIO](https://img.shields.io/badge/MinIO-S3_Storage-C72C48.svg?logo=minio&logoColor=white)](https://min.io)
 [![Docker](https://img.shields.io/badge/Docker-Compose_Ready-2496ED.svg?logo=docker&logoColor=white)](https://www.docker.com)
 [![Tests](https://img.shields.io/badge/pytest-119_passed_(100%25)-brightgreen.svg)](https://docs.pytest.org)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![License: Proprietary](https://img.shields.io/badge/License-Proprietary_All_Rights_Reserved-red.svg)](LICENSE)
 
 An enterprise-grade, multimodal deep learning decision support and tele-dermatology platform for automated skin lesion categorization, clinical risk triage, patient record management, and secure second-opinion workflows.
 
@@ -193,7 +193,7 @@ backend_App_MedAssist_AI/
 
 ## ⚖️ License & Medical Disclaimer
 
-This software is released under the [MIT License](LICENSE).
+This software is **Proprietary & Confidential**. All rights are reserved by the authors under the legal framework of Algerian Ministerial Decree 1275 (*Diplôme-Startup / Un brevet*). No part of this software, model weights, or documentation may be copied, reproduced, modified, distributed, or used for any purpose without prior written authorization from the authors. Academic review is granted exclusively to the university examination jury. See [LICENSE](LICENSE) for full terms.
 
 > **⚠️ Medical Decision Support Disclaimer**:  
 > MedAssist AI is engineered as an **adjunctive clinical decision support system** intended for use by qualified healthcare practitioners. It does **not** replace standard histopathological biopsy, clinical dermatoscopy, or independent medical judgment.
