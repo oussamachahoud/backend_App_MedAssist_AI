@@ -130,7 +130,7 @@
 
 ### 3.1 Submission Specification
 - **Endpoint**: `POST /api/v1/predict` (also available at root `/predict` for legacy compatibility)
-- **Authorization**: `Bearer <access_token>` (Optional for guest check, required for database persistence)
+- **Authorization**: `Bearer <access_token>` (Mandatory: Active verified medical doctor only. Unauthenticated requests return `401 Unauthorized`; non-doctor or pending accounts return `403 Forbidden`).
 - **Content-Type**: `multipart/form-data`
 - **Form Fields**:
   - `file`: Binary file (Required — JPEG/PNG dermoscopy or clinical photo, max 10 MB).

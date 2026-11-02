@@ -360,3 +360,5 @@ abla^3$)، مع إخضاع الصورة لكامل خط المعالجة الم�
 | **حفظ البيانات وحالات الانقطاع** | حفظ محلي فقط أو توقف كامل | Offline-First Cache مع مزامنة سحابية هجينة | العمل المستمر في المراكز الصحية الريفية |
 | **التوافق اللغوي** | واجهة إنجليزية وعربية بسيطة | ثلاث لغات كاملة (EN/FR/AR) مع دعم RTL | المواءمة مع البيئة السريرية الوطنية |
 | **بادئة مسارات REST API** | توقع الانتقال إلى `/api/v2` بتغير إصدار المنصة | الإبقاء على البادئة الجذرية الموحدة `/api/v1` لكافة الخدمات | الالتزام بمعايير REST بعدم كسر التوافقية العكسية (Backward Compatibility) وتفادي أخطاء 404 في تطبيق الهاتف |
+
+| **DEV-SEC-01** | **Diagnostic Pipeline Access Control** | Baseline prototype allowed unauthenticated guest predictions | Enforced mandatory active doctor JWT authentication on `POST /api/v1/predict` (returning 401 for guests) | Prevents autonomous layperson misdiagnosis, complies with Executive Decree 1275 ethics, guarantees 100% auditability and Grad-CAM++ generation |

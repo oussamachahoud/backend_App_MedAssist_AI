@@ -704,3 +704,20 @@ async def predict(
 3. **تفادي أخطاء التوجيه وفصل العملاء (Preventing 404 Divergence)**:
    - تطبيق الهاتف (Flutter) مضبوط معمارياً في الفئة المركزية `ApiConstants` للاتصال بالبادئة الجذرية `.../api/v1`.
    - لو تم تغيير البادئة برمجياً إلى `/api/v2` في واجهات معينة وإبقاؤها في أخرى، لتسبب ذلك في تشويش التوجيه وأخطاء `404 Not Found`. لذا فإن الحفاظ على البادئة الموحدة `/api/v1` يضمن اتصالاً واستقراراً سريرياً موثوقاً دون أي انقطاع.
+
+### 13.4 Strict Clinician-Only Inference & Legal Compliance (Executive Decree 1275)
+
+In alignment with **Algerian Ministerial Decree 1275 (Diplôme - Brevet d'Invention / Entreprise Innovante)** and international ethical guidelines for dermatological AI, system release V2.0 strictly enforces physician authentication on the diagnostic inference pipeline:
+
+1. **Elimination of Uncontrolled Layperson Self-Diagnosis**:
+   * Pre-release prototypes permitted unauthenticated guest predictions (`get_optional_active_doctor`).
+   * Production V2.0 restricts `POST /api/v1/predict` strictly to `get_current_active_doctor`. Unauthenticated requests return `401 Unauthorized` (`{"detail": "Not authenticated"}`).
+   * Accounts in `pending_verification` or `suspended` status receive `403 Forbidden`.
+
+2. **Guaranteed Clinical Accountability & Auditability**:
+   * Every executed prediction is guaranteed to generate an immutable `AnalysisRecord` in PostgreSQL with a unique UUID (`analysis_id`).
+   * Raw dermoscopy images are archived securely in MinIO with cryptographic isolation per doctor.
+   * Asynchronous background tasks automatically compute and persist Grad-CAM++ explainability heatmaps for every case.
+
+3. **Front-End Guard Rails**:
+   * The Flutter mobile application validates `isAuthenticated` prior to invoking the device camera or gallery picker, gracefully guiding unauthenticated guests to the Clinician Sign-In screen.
