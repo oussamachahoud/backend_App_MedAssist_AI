@@ -1,0 +1,23 @@
+PROPRIETARY AND CONFIDENTIAL SOFTWARE LICENSE
+
+Copyright (c) 2026 MedAssist AI Project Authors. All Rights Reserved.
+Academic Context: Master 2 Software Engineering (GLAA)
+Startup & Innovation Framework: Algerian Ministerial Decree 1275 (Diplôme-Startup / Brevet)
+
+1. PROPRIETARY RIGHTS AND OWNERSHIP
+All source code, algorithms, machine learning model architectures, trained weights, database schemas, user interface designs, and technical documentation contained in this repository are the exclusive intellectual property of the copyright holders ("Authors").
+
+2. STRICT RESTRICTION OF USE
+Except as expressly permitted under Section 3, NO PERSON OR ENTITY is authorized to:
+   a. Copy, clone, reproduce, modify, merge, or create derivative works of any part of this software.
+   b. Distribute, publish, sublicense, rent, lease, sell, or commercially exploit this software or its outputs.
+   c. Reverse engineer, decompile, or disassemble any portion of the deep learning models or backend/frontend logic.
+   d. Deploy or host this software for public, private, or commercial clinical use.
+
+ANY USE, COPYING, OR DISTRIBUTION OF THIS SOFTWARE WITHOUT PRIOR WRITTEN PERMISSION FROM THE COPYRIGHT HOLDERS IS STRICTLY PROHIBITED AND CONSTITUTES AN INFRINGEMENT OF INTELLECTUAL PROPERTY AND COPYRIGHT LAWS.
+
+3. LIMITED ACADEMIC EVALUATION PERMISSION
+Permission is granted exclusively to the designated academic jury, supervisors, and evaluation committee members of the University to inspect, execute, and review this software SOLELY for the purpose of academic evaluation, assessment, and defense of the Master 2 (GLAA) degree and Ministerial Decree 1275 startup certification.
+
+4. DISCLAIMER OF WARRANTY AND LIABILITY
+THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND NON-INFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES, MEDICAL COMPLICATIONS, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
