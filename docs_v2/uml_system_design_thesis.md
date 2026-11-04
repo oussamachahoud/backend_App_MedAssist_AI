@@ -207,6 +207,9 @@ flowchart LR
   6. Le spécialiste formule ses conclusions médicales, sélectionne la pathologie retenue et indique si une biopsie/exérèse d'urgence est requise.
   7. L'enregistrement est mis à jour : statut `COMPLETED`, horodatage scellé (`responded_at`).
   8. Le médecin généraliste reçoit l'avis d'expertise et valide la concordance médicale.
+- **Scénarios Alternatifs & Extensions** :
+  - *Extension 2a (Édition de la note clinique)* : Le praticien émetteur peut éditer sa note de transmission tant que la demande est en attente (PENDING).
+  - *Extension 2b (Annulation / Suppression)* : Le praticien peut annuler ou supprimer une demande d'expertise créée par erreur.
 
 ---
 
