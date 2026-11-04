@@ -265,6 +265,17 @@ class ApiClient {
     });
   }
 
+  async updateReferral(id, payload) {
+    return await this.request(`/referrals/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async deleteReferral(id) {
+    return await this.request(`/referrals/${id}`, { method: 'DELETE' });
+  }
+
   // ── Profile & Doctor Stats ────────────────────────────────────────────────
   async getMyProfile() {
     return await this.request('/profile');

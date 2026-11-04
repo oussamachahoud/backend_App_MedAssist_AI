@@ -30,6 +30,7 @@ from app.schemas.telemedicine import (
     ReferralListResponse,
     ReferralRespondRequest,
     ReferralResponse,
+    ReferralUpdateRequest,
 )
 
 router = APIRouter(prefix="/referrals", tags=["Referrals"])
@@ -252,3 +253,82 @@ def respond_to_referral(
     logger.info(f"Specialist {current_specialist.id} responded to referral {ref.id} with status {ref.status}")
     return _build_referral_response(ref)
 
+
+
+@router.put("/{referral_id}", response_model=ReferralResponse)
+def update_referral(
+    referral_id: uuid.UUID,
+    ref_in: ReferralUpdateRequest,
+    current_doctor: User = Depends(get_current_active_doctor),
+    db: Session = Depends(get_db),
+) -> ReferralResponse:
+    """
+    Update referral note, assigned specialist, or specialist response.
+    """
+    ref = db.query(Referral).filter(Referral.id == referral_id).first()
+    if not ref:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Referral not found",
+        )
+
+    is_sender = ref.referring_doctor_id == current_doctor.id
+    is_specialist = (ref.specialist_id == current_doctor.id) or (
+        current_doctor.profile and current_doctor.profile.doctor_type == DoctorType.SPECIALIST_DERMATOLOGIST
+    )
+    is_admin = current_doctor.role == UserRole.ADMIN
+
+    if not (is_sender or is_specialist or is_admin):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to update this referral",
+        )
+
+    if ref_in.referral_note is not None and (is_sender or is_admin):
+        ref.referral_note = ref_in.referral_note
+
+    if ref_in.specialist_id is not None and (is_sender or is_admin):
+        ref.specialist_id = ref_in.specialist_id
+
+    if ref_in.specialist_response is not None and (is_specialist or is_admin):
+        ref.specialist_response = ref_in.specialist_response
+        ref.responded_at = func.now()
+
+    if ref_in.status is not None and (is_specialist or is_admin):
+        ref.status = ref_in.status
+
+    db.commit()
+    db.refresh(ref)
+    logger.info(f"Referral {referral_id} updated by user {current_doctor.id}")
+    return _build_referral_response(ref)
+
+
+@router.delete("/{referral_id}")
+def delete_referral(
+    referral_id: uuid.UUID,
+    current_doctor: User = Depends(get_current_active_doctor),
+    db: Session = Depends(get_db),
+):
+    """
+    Delete a referral. Allowed for referring doctor or admin.
+    """
+    ref = db.query(Referral).filter(Referral.id == referral_id).first()
+    if not ref:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Referral not found",
+        )
+
+    is_sender = ref.referring_doctor_id == current_doctor.id
+    is_admin = current_doctor.role == UserRole.ADMIN
+
+    if not (is_sender or is_admin):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access forbidden: you can only delete your own referrals",
+        )
+
+    db.delete(ref)
+    db.commit()
+    logger.info(f"Referral {referral_id} deleted by doctor {current_doctor.id}")
+    return {"message": "Referral deleted successfully", "referral_id": str(referral_id)}

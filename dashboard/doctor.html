@@ -848,11 +848,481 @@
   <div id="toast-container"></div>
 
   <!-- Scripts -->
-  <script src="/dashboard/assets/js/wilayas.js"></script>
-  <script src="/dashboard/assets/vendor/chart.min.js"></script>
-  <script src="/dashboard/assets/js/api.js?v=2.2"></script>
-  <script src="/dashboard/assets/js/charts.js?v=2.2"></script>
-  <script src="/dashboard/assets/js/i18n.js?v=2.3"></script>
+  <script src="/dashboard/assets/js/wilayas.js">
+    // ── Edit & Delete Referral Handlers ──
+    window.openEditReferralModal = function(id, note, resp, status) {
+      document.getElementById('edit-ref-id').value = id;
+      document.getElementById('edit-ref-note').value = note || '';
+      const elResp = document.getElementById('edit-ref-resp');
+      const grpResp = document.getElementById('grp-edit-ref-resp');
+      if (elResp && grpResp) {
+        if (currentUser && currentUser.doctor_type === 'specialist_dermatologist') {
+          grpResp.style.display = 'block';
+          elResp.value = resp || '';
+        } else {
+          grpResp.style.display = 'none';
+        }
+      }
+      openModal('modal-edit-referral');
+    };
+
+    const editRefForm = document.getElementById('edit-referral-form');
+    if (editRefForm) {
+      editRefForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('edit-ref-id').value;
+        const payload = {
+          referral_note: document.getElementById('edit-ref-note').value.trim(),
+        };
+        const elResp = document.getElementById('edit-ref-resp');
+        if (elResp && elResp.value.trim()) {
+          payload.specialist_response = elResp.value.trim();
+        }
+        try {
+          await window.api.updateReferral(id, payload);
+          window.showToast('Referral updated successfully!', 'success');
+          closeModal('modal-edit-referral');
+          loadReferrals(currentRefType);
+        } catch (err) {
+          window.showToast(err.message, 'error');
+        }
+      });
+    }
+
+    window.deleteReferralConfirm = async function(id) {
+      if (!confirm('Are you sure you want to delete this referral?')) return;
+      try {
+        await window.api.deleteReferral(id);
+        window.showToast('Referral deleted successfully!', 'success');
+        loadReferrals(currentRefType);
+      } catch (err) {
+        window.showToast(err.message, 'error');
+      }
+    };
+
+    // ── Edit & Delete Patient Handlers ──
+    window.openEditPatientModal = function(id, code, year, sex, notes) {
+      document.getElementById('edit-pt-id').value = id;
+      document.getElementById('edit-pt-code').value = code || '';
+      document.getElementById('edit-pt-year').value = year || 1990;
+      document.getElementById('edit-pt-sex').value = sex || 'MALE';
+      document.getElementById('edit-pt-notes').value = notes || '';
+      openModal('modal-edit-patient');
+    };
+
+    const editPtForm = document.getElementById('edit-patient-form');
+    if (editPtForm) {
+      editPtForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('edit-pt-id').value;
+        const payload = {
+          birth_year: parseInt(document.getElementById('edit-pt-year').value),
+          sex: document.getElementById('edit-pt-sex').value,
+          notes: document.getElementById('edit-pt-notes').value.trim() || null,
+        };
+        try {
+          await window.api.updatePatient(id, payload);
+          window.showToast('Patient updated successfully!', 'success');
+          closeModal('modal-edit-patient');
+          loadPatients();
+        } catch (err) {
+          window.showToast(err.message, 'error');
+        }
+      });
+    }
+
+    window.deletePatientConfirm = async function(id, code) {
+      if (!confirm(`Are you sure you want to delete patient "${code}"?`)) return;
+      try {
+        await window.api.deletePatient(id);
+        window.showToast('Patient deleted successfully!', 'success');
+        loadPatients();
+      } catch (err) {
+        window.showToast(err.message, 'error');
+      }
+    };
+
+</script>
+  <script src="/dashboard/assets/vendor/chart.min.js">
+    // ── Edit & Delete Referral Handlers ──
+    window.openEditReferralModal = function(id, note, resp, status) {
+      document.getElementById('edit-ref-id').value = id;
+      document.getElementById('edit-ref-note').value = note || '';
+      const elResp = document.getElementById('edit-ref-resp');
+      const grpResp = document.getElementById('grp-edit-ref-resp');
+      if (elResp && grpResp) {
+        if (currentUser && currentUser.doctor_type === 'specialist_dermatologist') {
+          grpResp.style.display = 'block';
+          elResp.value = resp || '';
+        } else {
+          grpResp.style.display = 'none';
+        }
+      }
+      openModal('modal-edit-referral');
+    };
+
+    const editRefForm = document.getElementById('edit-referral-form');
+    if (editRefForm) {
+      editRefForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('edit-ref-id').value;
+        const payload = {
+          referral_note: document.getElementById('edit-ref-note').value.trim(),
+        };
+        const elResp = document.getElementById('edit-ref-resp');
+        if (elResp && elResp.value.trim()) {
+          payload.specialist_response = elResp.value.trim();
+        }
+        try {
+          await window.api.updateReferral(id, payload);
+          window.showToast('Referral updated successfully!', 'success');
+          closeModal('modal-edit-referral');
+          loadReferrals(currentRefType);
+        } catch (err) {
+          window.showToast(err.message, 'error');
+        }
+      });
+    }
+
+    window.deleteReferralConfirm = async function(id) {
+      if (!confirm('Are you sure you want to delete this referral?')) return;
+      try {
+        await window.api.deleteReferral(id);
+        window.showToast('Referral deleted successfully!', 'success');
+        loadReferrals(currentRefType);
+      } catch (err) {
+        window.showToast(err.message, 'error');
+      }
+    };
+
+    // ── Edit & Delete Patient Handlers ──
+    window.openEditPatientModal = function(id, code, year, sex, notes) {
+      document.getElementById('edit-pt-id').value = id;
+      document.getElementById('edit-pt-code').value = code || '';
+      document.getElementById('edit-pt-year').value = year || 1990;
+      document.getElementById('edit-pt-sex').value = sex || 'MALE';
+      document.getElementById('edit-pt-notes').value = notes || '';
+      openModal('modal-edit-patient');
+    };
+
+    const editPtForm = document.getElementById('edit-patient-form');
+    if (editPtForm) {
+      editPtForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('edit-pt-id').value;
+        const payload = {
+          birth_year: parseInt(document.getElementById('edit-pt-year').value),
+          sex: document.getElementById('edit-pt-sex').value,
+          notes: document.getElementById('edit-pt-notes').value.trim() || null,
+        };
+        try {
+          await window.api.updatePatient(id, payload);
+          window.showToast('Patient updated successfully!', 'success');
+          closeModal('modal-edit-patient');
+          loadPatients();
+        } catch (err) {
+          window.showToast(err.message, 'error');
+        }
+      });
+    }
+
+    window.deletePatientConfirm = async function(id, code) {
+      if (!confirm(`Are you sure you want to delete patient "${code}"?`)) return;
+      try {
+        await window.api.deletePatient(id);
+        window.showToast('Patient deleted successfully!', 'success');
+        loadPatients();
+      } catch (err) {
+        window.showToast(err.message, 'error');
+      }
+    };
+
+</script>
+  <script src="/dashboard/assets/js/api.js?v=2.2">
+    // ── Edit & Delete Referral Handlers ──
+    window.openEditReferralModal = function(id, note, resp, status) {
+      document.getElementById('edit-ref-id').value = id;
+      document.getElementById('edit-ref-note').value = note || '';
+      const elResp = document.getElementById('edit-ref-resp');
+      const grpResp = document.getElementById('grp-edit-ref-resp');
+      if (elResp && grpResp) {
+        if (currentUser && currentUser.doctor_type === 'specialist_dermatologist') {
+          grpResp.style.display = 'block';
+          elResp.value = resp || '';
+        } else {
+          grpResp.style.display = 'none';
+        }
+      }
+      openModal('modal-edit-referral');
+    };
+
+    const editRefForm = document.getElementById('edit-referral-form');
+    if (editRefForm) {
+      editRefForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('edit-ref-id').value;
+        const payload = {
+          referral_note: document.getElementById('edit-ref-note').value.trim(),
+        };
+        const elResp = document.getElementById('edit-ref-resp');
+        if (elResp && elResp.value.trim()) {
+          payload.specialist_response = elResp.value.trim();
+        }
+        try {
+          await window.api.updateReferral(id, payload);
+          window.showToast('Referral updated successfully!', 'success');
+          closeModal('modal-edit-referral');
+          loadReferrals(currentRefType);
+        } catch (err) {
+          window.showToast(err.message, 'error');
+        }
+      });
+    }
+
+    window.deleteReferralConfirm = async function(id) {
+      if (!confirm('Are you sure you want to delete this referral?')) return;
+      try {
+        await window.api.deleteReferral(id);
+        window.showToast('Referral deleted successfully!', 'success');
+        loadReferrals(currentRefType);
+      } catch (err) {
+        window.showToast(err.message, 'error');
+      }
+    };
+
+    // ── Edit & Delete Patient Handlers ──
+    window.openEditPatientModal = function(id, code, year, sex, notes) {
+      document.getElementById('edit-pt-id').value = id;
+      document.getElementById('edit-pt-code').value = code || '';
+      document.getElementById('edit-pt-year').value = year || 1990;
+      document.getElementById('edit-pt-sex').value = sex || 'MALE';
+      document.getElementById('edit-pt-notes').value = notes || '';
+      openModal('modal-edit-patient');
+    };
+
+    const editPtForm = document.getElementById('edit-patient-form');
+    if (editPtForm) {
+      editPtForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('edit-pt-id').value;
+        const payload = {
+          birth_year: parseInt(document.getElementById('edit-pt-year').value),
+          sex: document.getElementById('edit-pt-sex').value,
+          notes: document.getElementById('edit-pt-notes').value.trim() || null,
+        };
+        try {
+          await window.api.updatePatient(id, payload);
+          window.showToast('Patient updated successfully!', 'success');
+          closeModal('modal-edit-patient');
+          loadPatients();
+        } catch (err) {
+          window.showToast(err.message, 'error');
+        }
+      });
+    }
+
+    window.deletePatientConfirm = async function(id, code) {
+      if (!confirm(`Are you sure you want to delete patient "${code}"?`)) return;
+      try {
+        await window.api.deletePatient(id);
+        window.showToast('Patient deleted successfully!', 'success');
+        loadPatients();
+      } catch (err) {
+        window.showToast(err.message, 'error');
+      }
+    };
+
+</script>
+  <script src="/dashboard/assets/js/charts.js?v=2.2">
+    // ── Edit & Delete Referral Handlers ──
+    window.openEditReferralModal = function(id, note, resp, status) {
+      document.getElementById('edit-ref-id').value = id;
+      document.getElementById('edit-ref-note').value = note || '';
+      const elResp = document.getElementById('edit-ref-resp');
+      const grpResp = document.getElementById('grp-edit-ref-resp');
+      if (elResp && grpResp) {
+        if (currentUser && currentUser.doctor_type === 'specialist_dermatologist') {
+          grpResp.style.display = 'block';
+          elResp.value = resp || '';
+        } else {
+          grpResp.style.display = 'none';
+        }
+      }
+      openModal('modal-edit-referral');
+    };
+
+    const editRefForm = document.getElementById('edit-referral-form');
+    if (editRefForm) {
+      editRefForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('edit-ref-id').value;
+        const payload = {
+          referral_note: document.getElementById('edit-ref-note').value.trim(),
+        };
+        const elResp = document.getElementById('edit-ref-resp');
+        if (elResp && elResp.value.trim()) {
+          payload.specialist_response = elResp.value.trim();
+        }
+        try {
+          await window.api.updateReferral(id, payload);
+          window.showToast('Referral updated successfully!', 'success');
+          closeModal('modal-edit-referral');
+          loadReferrals(currentRefType);
+        } catch (err) {
+          window.showToast(err.message, 'error');
+        }
+      });
+    }
+
+    window.deleteReferralConfirm = async function(id) {
+      if (!confirm('Are you sure you want to delete this referral?')) return;
+      try {
+        await window.api.deleteReferral(id);
+        window.showToast('Referral deleted successfully!', 'success');
+        loadReferrals(currentRefType);
+      } catch (err) {
+        window.showToast(err.message, 'error');
+      }
+    };
+
+    // ── Edit & Delete Patient Handlers ──
+    window.openEditPatientModal = function(id, code, year, sex, notes) {
+      document.getElementById('edit-pt-id').value = id;
+      document.getElementById('edit-pt-code').value = code || '';
+      document.getElementById('edit-pt-year').value = year || 1990;
+      document.getElementById('edit-pt-sex').value = sex || 'MALE';
+      document.getElementById('edit-pt-notes').value = notes || '';
+      openModal('modal-edit-patient');
+    };
+
+    const editPtForm = document.getElementById('edit-patient-form');
+    if (editPtForm) {
+      editPtForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('edit-pt-id').value;
+        const payload = {
+          birth_year: parseInt(document.getElementById('edit-pt-year').value),
+          sex: document.getElementById('edit-pt-sex').value,
+          notes: document.getElementById('edit-pt-notes').value.trim() || null,
+        };
+        try {
+          await window.api.updatePatient(id, payload);
+          window.showToast('Patient updated successfully!', 'success');
+          closeModal('modal-edit-patient');
+          loadPatients();
+        } catch (err) {
+          window.showToast(err.message, 'error');
+        }
+      });
+    }
+
+    window.deletePatientConfirm = async function(id, code) {
+      if (!confirm(`Are you sure you want to delete patient "${code}"?`)) return;
+      try {
+        await window.api.deletePatient(id);
+        window.showToast('Patient deleted successfully!', 'success');
+        loadPatients();
+      } catch (err) {
+        window.showToast(err.message, 'error');
+      }
+    };
+
+</script>
+  <script src="/dashboard/assets/js/i18n.js?v=2.3">
+    // ── Edit & Delete Referral Handlers ──
+    window.openEditReferralModal = function(id, note, resp, status) {
+      document.getElementById('edit-ref-id').value = id;
+      document.getElementById('edit-ref-note').value = note || '';
+      const elResp = document.getElementById('edit-ref-resp');
+      const grpResp = document.getElementById('grp-edit-ref-resp');
+      if (elResp && grpResp) {
+        if (currentUser && currentUser.doctor_type === 'specialist_dermatologist') {
+          grpResp.style.display = 'block';
+          elResp.value = resp || '';
+        } else {
+          grpResp.style.display = 'none';
+        }
+      }
+      openModal('modal-edit-referral');
+    };
+
+    const editRefForm = document.getElementById('edit-referral-form');
+    if (editRefForm) {
+      editRefForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('edit-ref-id').value;
+        const payload = {
+          referral_note: document.getElementById('edit-ref-note').value.trim(),
+        };
+        const elResp = document.getElementById('edit-ref-resp');
+        if (elResp && elResp.value.trim()) {
+          payload.specialist_response = elResp.value.trim();
+        }
+        try {
+          await window.api.updateReferral(id, payload);
+          window.showToast('Referral updated successfully!', 'success');
+          closeModal('modal-edit-referral');
+          loadReferrals(currentRefType);
+        } catch (err) {
+          window.showToast(err.message, 'error');
+        }
+      });
+    }
+
+    window.deleteReferralConfirm = async function(id) {
+      if (!confirm('Are you sure you want to delete this referral?')) return;
+      try {
+        await window.api.deleteReferral(id);
+        window.showToast('Referral deleted successfully!', 'success');
+        loadReferrals(currentRefType);
+      } catch (err) {
+        window.showToast(err.message, 'error');
+      }
+    };
+
+    // ── Edit & Delete Patient Handlers ──
+    window.openEditPatientModal = function(id, code, year, sex, notes) {
+      document.getElementById('edit-pt-id').value = id;
+      document.getElementById('edit-pt-code').value = code || '';
+      document.getElementById('edit-pt-year').value = year || 1990;
+      document.getElementById('edit-pt-sex').value = sex || 'MALE';
+      document.getElementById('edit-pt-notes').value = notes || '';
+      openModal('modal-edit-patient');
+    };
+
+    const editPtForm = document.getElementById('edit-patient-form');
+    if (editPtForm) {
+      editPtForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('edit-pt-id').value;
+        const payload = {
+          birth_year: parseInt(document.getElementById('edit-pt-year').value),
+          sex: document.getElementById('edit-pt-sex').value,
+          notes: document.getElementById('edit-pt-notes').value.trim() || null,
+        };
+        try {
+          await window.api.updatePatient(id, payload);
+          window.showToast('Patient updated successfully!', 'success');
+          closeModal('modal-edit-patient');
+          loadPatients();
+        } catch (err) {
+          window.showToast(err.message, 'error');
+        }
+      });
+    }
+
+    window.deletePatientConfirm = async function(id, code) {
+      if (!confirm(`Are you sure you want to delete patient "${code}"?`)) return;
+      try {
+        await window.api.deletePatient(id);
+        window.showToast('Patient deleted successfully!', 'success');
+        loadPatients();
+      } catch (err) {
+        window.showToast(err.message, 'error');
+      }
+    };
+
+</script>
     <script>
     // ── Authentic PAD-UFES-20 Benchmark Samples ──
     window.PAD_SAMPLES = {
@@ -1421,9 +1891,11 @@
             <td>${window.escapeHtml(p.sex)}</td>
             <td>${new Date(p.created_at).toLocaleDateString()}</td>
             <td>
-              <button class="btn btn-sm btn-secondary" onclick="viewTimeline('${p.id}', '${p.patient_code}')">
-                📊 View Timeline
-              </button>
+              <div style="display: flex; gap: 4px; align-items: center;">
+                <button class="btn btn-sm btn-secondary" onclick="viewTimeline('${p.id}', '${p.patient_code}')" title="View Timeline">📊 Timeline</button>
+                <button class="btn btn-sm btn-secondary" title="Edit Patient" onclick="openEditPatientModal('${p.id}', '${window.escapeHtml(p.patient_code)}', ${p.birth_year}, '${window.escapeHtml(p.sex)}', '${window.escapeHtml(p.notes || '')}')" style="padding: 2px 7px;">✏️</button>
+                <button class="btn btn-sm btn-danger" title="Delete Patient" onclick="deletePatientConfirm('${p.id}', '${window.escapeHtml(p.patient_code)}')" style="padding: 2px 7px;">🗑️</button>
+              </div>
             </td>
           </tr>
         `).join('');
@@ -1521,11 +1993,15 @@
             <td><span style="font-size: 0.82rem;">${window.escapeHtml(r.referral_note || 'None')}</span></td>
             <td><span style="font-size: 0.82rem; color: var(--teal-300);">${window.escapeHtml(r.specialist_response || 'Pending evaluation')}</span></td>
             <td>
-              ${type === 'received' && r.status !== 'completed' ? `
-                <button class="btn btn-sm btn-primary" onclick="openRespondReferralModal('${r.id}')">Respond</button>
-              ` : `
-                <button class="btn btn-sm btn-secondary" onclick="downloadPdf('${r.analysis_id}')">PDF</button>
-              `}
+              <div style="display: flex; gap: 4px; align-items: center;">
+                ${type === 'received' && r.status !== 'completed' ? `
+                  <button class="btn btn-sm btn-primary" onclick="openRespondReferralModal('${r.id}')">Respond</button>
+                ` : `
+                  <button class="btn btn-sm btn-secondary" onclick="downloadPdf('${r.analysis_id}')" title="Download Report">PDF</button>
+                `}
+                <button class="btn btn-sm btn-secondary" title="Edit Referral" onclick="openEditReferralModal('${r.id}', '${window.escapeHtml(r.referral_note)}', '${window.escapeHtml(r.specialist_response || '')}', '${r.status}')" style="padding: 2px 7px;">✏️</button>
+                <button class="btn btn-sm btn-danger" title="Delete Referral" onclick="deleteReferralConfirm('${r.id}')" style="padding: 2px 7px;">🗑️</button>
+              </div>
             </td>
           </tr>
         `).join('');
@@ -1839,7 +2315,168 @@
         setTimeout(() => switchTab(initialHash, false), 50);
       }
     })();
-  </script>
+  
+    // ── Edit & Delete Referral Handlers ──
+    window.openEditReferralModal = function(id, note, resp, status) {
+      document.getElementById('edit-ref-id').value = id;
+      document.getElementById('edit-ref-note').value = note || '';
+      const elResp = document.getElementById('edit-ref-resp');
+      const grpResp = document.getElementById('grp-edit-ref-resp');
+      if (elResp && grpResp) {
+        if (currentUser && currentUser.doctor_type === 'specialist_dermatologist') {
+          grpResp.style.display = 'block';
+          elResp.value = resp || '';
+        } else {
+          grpResp.style.display = 'none';
+        }
+      }
+      openModal('modal-edit-referral');
+    };
+
+    const editRefForm = document.getElementById('edit-referral-form');
+    if (editRefForm) {
+      editRefForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('edit-ref-id').value;
+        const payload = {
+          referral_note: document.getElementById('edit-ref-note').value.trim(),
+        };
+        const elResp = document.getElementById('edit-ref-resp');
+        if (elResp && elResp.value.trim()) {
+          payload.specialist_response = elResp.value.trim();
+        }
+        try {
+          await window.api.updateReferral(id, payload);
+          window.showToast('Referral updated successfully!', 'success');
+          closeModal('modal-edit-referral');
+          loadReferrals(currentRefType);
+        } catch (err) {
+          window.showToast(err.message, 'error');
+        }
+      });
+    }
+
+    window.deleteReferralConfirm = async function(id) {
+      if (!confirm('Are you sure you want to delete this referral?')) return;
+      try {
+        await window.api.deleteReferral(id);
+        window.showToast('Referral deleted successfully!', 'success');
+        loadReferrals(currentRefType);
+      } catch (err) {
+        window.showToast(err.message, 'error');
+      }
+    };
+
+    // ── Edit & Delete Patient Handlers ──
+    window.openEditPatientModal = function(id, code, year, sex, notes) {
+      document.getElementById('edit-pt-id').value = id;
+      document.getElementById('edit-pt-code').value = code || '';
+      document.getElementById('edit-pt-year').value = year || 1990;
+      document.getElementById('edit-pt-sex').value = sex || 'MALE';
+      document.getElementById('edit-pt-notes').value = notes || '';
+      openModal('modal-edit-patient');
+    };
+
+    const editPtForm = document.getElementById('edit-patient-form');
+    if (editPtForm) {
+      editPtForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('edit-pt-id').value;
+        const payload = {
+          birth_year: parseInt(document.getElementById('edit-pt-year').value),
+          sex: document.getElementById('edit-pt-sex').value,
+          notes: document.getElementById('edit-pt-notes').value.trim() || null,
+        };
+        try {
+          await window.api.updatePatient(id, payload);
+          window.showToast('Patient updated successfully!', 'success');
+          closeModal('modal-edit-patient');
+          loadPatients();
+        } catch (err) {
+          window.showToast(err.message, 'error');
+        }
+      });
+    }
+
+    window.deletePatientConfirm = async function(id, code) {
+      if (!confirm(`Are you sure you want to delete patient "${code}"?`)) return;
+      try {
+        await window.api.deletePatient(id);
+        window.showToast('Patient deleted successfully!', 'success');
+        loadPatients();
+      } catch (err) {
+        window.showToast(err.message, 'error');
+      }
+    };
+
+</script>
+
+  <!-- ── MODAL: EDIT REFERRAL ─────────────────────────────────────────── -->
+  <div class="modal-overlay" id="modal-edit-referral">
+    <div class="modal-content" style="max-width: 540px;">
+      <div class="modal-header">
+        <h3 style="font-size: 1.15rem; font-weight: 700;">Edit Referral Details</h3>
+        <button class="modal-close" onclick="closeModal('modal-edit-referral')">&times;</button>
+      </div>
+      <form id="edit-referral-form">
+        <div class="modal-body">
+          <input type="hidden" id="edit-ref-id" />
+          <div class="form-group" id="grp-edit-ref-note">
+            <label class="form-label">Clinical Referral Note *</label>
+            <textarea id="edit-ref-note" class="form-control" rows="4" required minlength="2"></textarea>
+          </div>
+          <div class="form-group" id="grp-edit-ref-resp" style="display: none;">
+            <label class="form-label">Specialist Clinical Opinion</label>
+            <textarea id="edit-ref-resp" class="form-control" rows="4"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-edit-referral')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ── MODAL: EDIT PATIENT ──────────────────────────────────────────── -->
+  <div class="modal-overlay" id="modal-edit-patient">
+    <div class="modal-content" style="max-width: 500px;">
+      <div class="modal-header">
+        <h3 style="font-size: 1.15rem; font-weight: 700;">Edit Patient Record</h3>
+        <button class="modal-close" onclick="closeModal('modal-edit-patient')">&times;</button>
+      </div>
+      <form id="edit-patient-form">
+        <div class="modal-body">
+          <input type="hidden" id="edit-pt-id" />
+          <div class="form-group">
+            <label class="form-label">Patient Code</label>
+            <input type="text" id="edit-pt-code" class="form-control" disabled style="opacity: 0.7;" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Birth Year</label>
+            <input type="number" id="edit-pt-year" class="form-control" min="1920" max="2026" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Biological Sex</label>
+            <select id="edit-pt-sex" class="form-control" required>
+              <option value="MALE">Male</option>
+              <option value="FEMALE">Female</option>
+              <option value="OTHER">Other / Unspecified</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Clinical Notes</label>
+            <textarea id="edit-pt-notes" class="form-control" rows="3" placeholder="Patient medical history, allergies..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-edit-patient')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Update Patient</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
 </body>
 </html>
 

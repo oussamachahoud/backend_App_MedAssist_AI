@@ -129,6 +129,13 @@ class ReferralRespondRequest(BaseModel):
     specialist_response: str = Field(..., min_length=5, max_length=2000)
 
 
+class ReferralUpdateRequest(BaseModel):
+    referral_note: Optional[str] = Field(None, min_length=2, max_length=1000)
+    specialist_id: Optional[uuid.UUID] = None
+    specialist_response: Optional[str] = Field(None, min_length=2, max_length=2000)
+    status: Optional[ReferralStatus] = None
+
+
 class ReferralResponse(BaseModel):
     id: uuid.UUID
     analysis_id: uuid.UUID
