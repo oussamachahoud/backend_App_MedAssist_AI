@@ -227,13 +227,15 @@ POST   /api/v1/analyses/:id/export-pdf     # تصدير PDF مع QR code
 > [!TIP]
 > **حماية زمن الاستجابة**: `POST /predict` يعيد النتيجة فوراً بدون Grad-CAM (يبقى تحت 2s). توليد Grad-CAM++ يحدث في `FastAPI BackgroundTasks` (≈ 200-300ms إضافية) ويُحدّث `gradcam_storage_key` في DB — جاهز عند فتح الطبيب للوحة الويب.
 
-### Referrals — الإحالات (5 endpoints)
-```
+### Referrals — الإحالات (7 endpoints — دورة CRUD كاملة)
+`
 POST   /api/v1/referrals                   # إنشاء إحالة (GP → Specialist)
 GET    /api/v1/referrals/sent              # إحالاتي المرسلة (GP)
 GET    /api/v1/referrals/received          # إحالات واردة (Specialist)
-PUT    /api/v1/referrals/:id/respond       # رد الأخصائي على الإحالة
 GET    /api/v1/referrals/:id               # تفاصيل إحالة
+PUT    /api/v1/referrals/:id               # تعديل بيانات وملاحظة الإحالة
+PUT    /api/v1/referrals/:id/respond       # رد وتوصية الأخصائي على الإحالة
+DELETE /api/v1/referrals/:id               # حذف / إلغاء الإحالة (GP / Admin)
 ```
 
 ### Patient Follow-up — رابط QR (2 endpoints)
