@@ -19,6 +19,7 @@ from PIL import Image
 from app.core.database import SessionLocal
 from app.db_models.analysis import AnalysisRecord
 from app.services.model_service import model_service
+from app.services.preprocessing_service import _preprocess_numpy
 from app.services.storage_service import storage_service
 
 
