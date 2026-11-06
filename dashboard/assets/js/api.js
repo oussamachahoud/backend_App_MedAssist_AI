@@ -438,6 +438,29 @@ async function syncPlatformResources() {
     if (res.mobile_apk_url) {
       apkLinks.forEach(el => el.href = res.mobile_apk_url);
     }
+    if (res.apk_file_size) {
+      const sizeStr = res.apk_file_size.trim();
+      const numOnly = sizeStr.replace(/[^0-9.]/g, '');
+      const enPill = `Size: ~${sizeStr}`;
+      const arPill = `الحجم: ~${numOnly ? numOnly + ' ميغابايت' : sizeStr}`;
+      const enSub = `MedAssist-AI.apk • ~${sizeStr} • Android 8.0+`;
+      const arSub = `MedAssist-AI.apk • ~${numOnly ? numOnly + ' ميغا' : sizeStr} • أندرويد 8.0+`;
+
+      const currentLang = document.documentElement.getAttribute('lang') || 
+                          (document.documentElement.getAttribute('dir') === 'rtl' ? 'ar' : 'en');
+
+      document.querySelectorAll('.meta-pill span[data-en*="Size:"], #apk-meta-size').forEach(el => {
+        el.setAttribute('data-en', enPill);
+        el.setAttribute('data-ar', arPill);
+        el.textContent = currentLang === 'ar' ? arPill : enPill;
+      });
+
+      document.querySelectorAll('.download-btn .sub-txt, #apk-sub-txt').forEach(el => {
+        el.setAttribute('data-en', enSub);
+        el.setAttribute('data-ar', arSub);
+        el.textContent = currentLang === 'ar' ? arSub : enSub;
+      });
+    }
     if (res.landing_page_url) {
       landLinks.forEach(el => el.href = res.landing_page_url);
     }

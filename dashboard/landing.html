@@ -689,8 +689,8 @@
     </div>
   </footer>
 
-    <script src="/dashboard/assets/js/api.js?v=2.2"></script>
-  <script src="/dashboard/assets/js/landing.js?v=2.2"></script>
+    <script src="/dashboard/assets/js/api.js?v=2.5"></script>
+  <script src="/dashboard/assets/js/landing.js?v=2.5"></script>
   <script>
     // Sync dynamic platform resources configured by admin
     fetch('/api/v1/public/platform-resources')
@@ -702,6 +702,29 @@
         }
         if (res.video_walkthrough_url) {
           document.querySelectorAll('a[href*="youtube.com"]').forEach(el => el.href = res.video_walkthrough_url);
+        }
+        if (res.apk_file_size) {
+          const sizeStr = res.apk_file_size.trim();
+          const numOnly = sizeStr.replace(/[^0-9.]/g, '');
+          const enPill = `Size: ~${sizeStr}`;
+          const arPill = `الحجم: ~${numOnly ? numOnly + ' ميغابايت' : sizeStr}`;
+          const enSub = `MedAssist-AI.apk • ~${sizeStr} • Android 8.0+`;
+          const arSub = `MedAssist-AI.apk • ~${numOnly ? numOnly + ' ميغا' : sizeStr} • أندرويد 8.0+`;
+
+          const currentLang = document.documentElement.getAttribute('lang') || 
+                              (document.documentElement.getAttribute('dir') === 'rtl' ? 'ar' : 'en');
+
+          document.querySelectorAll('.meta-pill span[data-en*="Size:"]').forEach(el => {
+            el.setAttribute('data-en', enPill);
+            el.setAttribute('data-ar', arPill);
+            el.textContent = currentLang === 'ar' ? arPill : enPill;
+          });
+
+          document.querySelectorAll('.download-btn .sub-txt').forEach(el => {
+            el.setAttribute('data-en', enSub);
+            el.setAttribute('data-ar', arSub);
+            el.textContent = currentLang === 'ar' ? arSub : enSub;
+          });
         }
       })
       .catch(() => {});
