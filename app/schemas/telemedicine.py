@@ -89,6 +89,7 @@ class PatientResponse(BaseModel):
     sex: PatientSex
     notes: Optional[str] = None
     created_at: datetime
+    analyses_count: int = 0
 
     model_config = ConfigDict(from_attributes=True)
 

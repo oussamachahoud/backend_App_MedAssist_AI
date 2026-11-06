@@ -13,7 +13,7 @@ from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import desc, func
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.api.deps import get_current_active_doctor, get_db
 from app.core.logging import logger
@@ -84,9 +84,20 @@ def list_patients(
 
     total = query.count()
     offset = (page - 1) * page_size
-    records = query.order_by(desc(Patient.created_at)).offset(offset).limit(page_size).all()
+    records = (
+        query.options(selectinload(Patient.analyses))
+        .order_by(desc(Patient.created_at))
+        .offset(offset)
+        .limit(page_size)
+        .all()
+    )
 
-    items = [PatientResponse.model_validate(p) for p in records]
+    items = []
+    for p in records:
+        resp = PatientResponse.model_validate(p)
+        resp.analyses_count = len(p.analyses) if p.analyses else 0
+        items.append(resp)
+
     return PatientListResponse(
         items=items,
         total=total,
@@ -160,6 +171,7 @@ def get_patient(
         )
 
     response_data = PatientResponse.model_validate(patient).model_dump()
+    response_data["analyses_count"] = len(timeline)
     return PatientDetailResponse(**response_data, timeline=timeline)
 
 

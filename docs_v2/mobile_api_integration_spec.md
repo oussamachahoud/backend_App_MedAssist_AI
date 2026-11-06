@@ -226,11 +226,26 @@ For offline validation and instant clinical demonstrations without requiring rea
 
 ### 4.2 List Patients
 - **Endpoint**: `GET /api/v1/patients/?search=DZ-31&page=1&page_size=20`
-- **Response**: List of patients belonging to the authenticated clinician.
+- **Response**: List of patients (`List[PatientResponse]`) belonging to the authenticated clinician.
+```json
+[
+  {
+    "id": "8e5b8260-bdc6-4aea-a9fc-062aa9e18640",
+    "patient_code": "DZ-31-P0105",
+    "birth_year": 1962,
+    "sex": "male",
+    "notes": "Patient with fair skin and occupational chronic sun exposure.",
+    "analyses_count": 1,
+    "created_at": "2026-10-26T20:00:00Z",
+    "updated_at": "2026-11-05T21:00:00Z"
+  }
+]
+```
+> **Key Integration Note (V2.1 Update)**: `analyses_count` is eager-loaded via `selectinload(Patient.analyses)` in the backend. Mobile client `PatientModel.fromJson` consumes `analyses_count` to display `Scans: N` badge on patient registry cards and detail header.
 
 ### 4.3 Patient Details & Lesion Evolution Timeline
 - **Endpoint**: `GET /api/v1/patients/{patient_id}`
-- **Response**: Detailed patient object (`PatientDetailResponse`) including an embedded chronological `timeline` array of scans with date, lesion_tag, predicted_class, confidence, risk_level, and diameter measurements for visual timeline charting.
+- **Response**: Detailed patient object (`PatientDetailResponse`) including `analyses_count` and an embedded chronological `timeline` array of scans with date, lesion_tag, predicted_class, confidence, risk_level, and diameter measurements for visual timeline charting.
 
 ---
 
@@ -241,22 +256,32 @@ For offline validation and instant clinical demonstrations without requiring rea
   - `doctor_type`: Optional string filter (`general_practitioner` | `specialist_dermatologist`).
 - **Response (200 OK)**: Array of public verified doctors with `full_name`, `specialization`, `institution_name`, `wilaya`.
 
-### 4.5 Public QR Follow-Up Verification
+### 4.5 Public QR Follow-Up Verification & In-App Scanner
 - **Endpoint**: `GET /api/v1/public/follow-up/{token}`
 - **Response (200 OK)**:
 ```json
 {
-  "analysis_id": "c1f2e3d4-...",
+  "analysis_id": "9a7ff469-63f8-4817-aa4d-e0825ca453bf",
   "predicted_class": "MEL",
-  "confidence": 0.895,
+  "confidence": 0.892,
   "risk_level": "CRITICAL",
-  "created_at": "2026-11-01T12:00:00Z",
-  "next_followup_date": "2026-12-01",
+  "recommendations": [
+    "Primary classification: MEL",
+    "Correlation with dermoscopy and ABCDE clinical criteria recommended."
+  ],
+  "created_at": "2026-10-26T23:15:45.802611+01:00",
+  "next_followup_date": "2026-11-14",
   "doctor_confirmed": true,
-  "doctor_diagnosis": "Malignant Melanoma (Breslow 1.8mm)",
-  "doctor_institution": "CHU Mustapha Bacha, Alger"
+  "doctor_diagnosis": "Superficial Spreading Melanoma (High Breslow suspected)",
+  "doctor_institution": "Polyclinique Mohamed Seghir Benali, Skikda"
 }
 ```
+- **Direct Mobile Scanner & Domain-Agnostic Extraction (`mobile_scanner: ^5.2.3`)**:
+  - `QRFollowUpView` features an integrated camera scanner bottom-sheet to eliminate manual copy/paste.
+  - When scanning a physical QR code from a printed PDF report or web interface, the scanned payload is typically a full URL (e.g., `https://medassist.dz/dashboard/follow-up.html?token=eyJ...`).
+  - The client controller executes `extractToken(rawInput)`: it parses query parameters (`?token=...`) with regex fallback, discarding any domain name (`medassist.dz`, cloud tunnels, local IP).
+  - The layout prevents horizontal overflow on compact screens via responsive `Wrap` and `FittedBox` on `RiskLevelBadge`.
+  - The input card auto-collapses upon successful verification, highlighting the validated clinical follow-up card and the scheduled appointment banner.
 
 ---
 

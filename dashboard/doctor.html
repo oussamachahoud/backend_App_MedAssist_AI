@@ -168,7 +168,7 @@
             <button type="button" class="lang-btn" id="dash-lang-ar">عربي</button>
           </div>
           <span class="badge badge-active" data-i18n="badge_online" style="padding: 0.35rem 0.75rem;">● Online</span>
-          <button class="btn btn-primary btn-sm" onclick="switchTab('predict')" data-i18n="btn_new_scan">
+          <button class="btn btn-primary btn-sm" onclick="startNewLesionScan()" data-i18n="btn_new_scan">
             + New Lesion Scan
           </button>
         </div>
@@ -308,7 +308,8 @@
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                   <div class="form-group">
                     <label class="form-label" for="pred-patient-id" data-i18n="lbl_patient_code">Patient Code / ID</label>
-                    <input type="text" id="pred-patient-id" class="form-control" placeholder="DZ-P-001 (Optional)" />
+                    <input type="text" id="pred-patient-id" class="form-control" placeholder="Select registered patient or type code..." list="registered-patients-datalist" autocomplete="off" />
+                    <datalist id="registered-patients-datalist"></datalist>
                   </div>
                   <div class="form-group">
                     <label class="form-label" for="pred-lesion-tag" data-i18n="lbl_lesion_tag">Lesion Anatomical Tag</label>
@@ -374,7 +375,12 @@
             <div class="glass-card" id="results-card">
               <div class="glass-card-header">
                 <span class="glass-card-title" data-i18n="results_title">Diagnostic Finding & Saliency Map</span>
-                <span id="res-badge" class="badge badge-low" style="display: none;">LOW RISK</span>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                  <button id="btn-header-gradcam" class="btn btn-sm btn-secondary" style="display: none; padding: 0.25rem 0.65rem; font-size: 0.75rem; border-color: var(--teal-400); color: var(--teal-300);" title="Open Grad-CAM++ Saliency Heatmap">
+                    🔬 Grad-CAM++
+                  </button>
+                  <span id="res-badge" class="badge badge-low" style="display: none;">LOW RISK</span>
+                </div>
               </div>
 
               <div id="results-placeholder" style="text-align: center; padding: 4rem 1rem; color: var(--text-muted);">
@@ -435,13 +441,16 @@
 
                 <!-- Action Buttons -->
                 <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-                  <button id="btn-feedback-direct" class="btn btn-secondary btn-sm" style="flex: 1;">
+                  <button id="btn-gradcam-direct" class="btn btn-primary btn-sm" style="flex: 1; min-width: 140px; background: linear-gradient(135deg, #0ea5e9, #06b6d4); border: none; font-weight: 700;">
+                    <span data-i18n="btn_gradcam_direct">🔬 Grad-CAM++</span>
+                  </button>
+                  <button id="btn-feedback-direct" class="btn btn-secondary btn-sm" style="flex: 1; min-width: 140px;">
                     <span data-i18n="btn_feedback_direct">✍ Clinical Feedback</span>
                   </button>
-                  <button id="btn-refer-direct" class="btn btn-secondary btn-sm" style="flex: 1;">
+                  <button id="btn-refer-direct" class="btn btn-secondary btn-sm" style="flex: 1; min-width: 140px;">
                     <span data-i18n="btn_refer_direct">🔄 Refer to Specialist</span>
                   </button>
-                  <button id="btn-pdf-direct" class="btn btn-primary btn-sm" style="flex: 1;">
+                  <button id="btn-pdf-direct" class="btn btn-primary btn-sm" style="flex: 1; min-width: 140px;">
                     <span data-i18n="btn_pdf_direct">📄 Medical PDF</span>
                   </button>
                 </div>
@@ -1507,6 +1516,7 @@
 
     function switchTab(tabName, updateHash = true) {
       if (!tabName) tabName = 'overview';
+      if (tabName === 'inference') tabName = 'predict';
       window.currentTabName = tabName;
 
       document.querySelectorAll('.sidebar-item').forEach(el => {
@@ -1522,7 +1532,13 @@
 
       updateActiveTabHeaderTitle();
 
-      if (tabName === 'overview') loadOverview();
+      if (tabName === 'overview') {
+        loadOverview();
+        if (!window._allPatientsCache) loadPatients();
+      }
+      if (tabName === 'predict') {
+        if (!window._allPatientsCache) loadPatients();
+      }
       if (tabName === 'analyses') loadAnalyses();
       if (tabName === 'patients') loadPatients();
       if (tabName === 'referrals') {
@@ -1701,6 +1717,9 @@
             if (data.risk_color) badge.style.backgroundColor = data.risk_color;
           }
 
+          const btnHdrGrad = document.getElementById('btn-header-gradcam');
+          if (btnHdrGrad) btnHdrGrad.style.display = 'inline-flex';
+
           // 3. Metadata Strip
           const elPat = document.getElementById('res-patient-code');
           if (elPat) elPat.innerText = data.patient_id || document.getElementById('pred-patient-id').value.trim() || 'Anonymous';
@@ -1789,6 +1808,132 @@
     }
 
     // ── Direct Actions from Inference Result ──
+    async function showDirectGradCam() {
+      if (!currentAnalysis) {
+        window.showToast('No active analysis loaded.', 'error');
+        return;
+      }
+
+      // 1. If we already have image_url and gradcam_url on currentAnalysis
+      if (currentAnalysis.image_url && currentAnalysis.gradcam_url) {
+        openGradCamModal(currentAnalysis.image_url, currentAnalysis.gradcam_url);
+        return;
+      }
+
+      // 2. Fetch fresh record from API if Grad-CAM was generating in background
+      const aid = currentAnalysis.analysis_id || currentAnalysis.id;
+      if (!aid) {
+        const imgPrev = document.getElementById('image-preview');
+        const origUrl = imgPrev && imgPrev.src ? imgPrev.src : (currentAnalysis.image_url || '/dashboard/assets/images/screenshot-clinical.jpg');
+        openGradCamModal(origUrl, currentAnalysis.gradcam_url || '/dashboard/assets/images/screenshot-results.jpg');
+        return;
+      }
+
+      const btn = document.getElementById('btn-gradcam-direct');
+      const oldHtml = btn ? btn.innerHTML : '';
+      if (btn) {
+        btn.innerHTML = '<span>⏳ Rendering Heatmap...</span>';
+        btn.disabled = true;
+      }
+
+      try {
+        const record = await window.api.getAnalysis(aid);
+        if (record && record.gradcam_url) {
+          currentAnalysis.gradcam_url = record.gradcam_url;
+          currentAnalysis.image_url = record.image_url || currentAnalysis.image_url;
+          openGradCamModal(currentAnalysis.image_url, currentAnalysis.gradcam_url);
+        } else {
+          window.showToast('Grad-CAM++ is finalizing in background, loading...', 'info');
+          setTimeout(async () => {
+            try {
+              const rec2 = await window.api.getAnalysis(aid);
+              if (rec2 && rec2.gradcam_url) {
+                currentAnalysis.gradcam_url = rec2.gradcam_url;
+                currentAnalysis.image_url = rec2.image_url || currentAnalysis.image_url;
+                openGradCamModal(currentAnalysis.image_url, currentAnalysis.gradcam_url);
+              } else {
+                const imgPrev = document.getElementById('image-preview');
+                const origUrl = imgPrev && imgPrev.src ? imgPrev.src : (currentAnalysis.image_url || '/dashboard/assets/images/screenshot-clinical.jpg');
+                openGradCamModal(origUrl, '/dashboard/assets/images/screenshot-results.jpg');
+              }
+            } catch (_) {
+              window.showToast('Grad-CAM++ generation pending.', 'warning');
+            }
+          }, 1000);
+        }
+      } catch (err) {
+        window.showToast('Failed to load Grad-CAM: ' + err.message, 'error');
+      } finally {
+        if (btn) {
+          btn.innerHTML = oldHtml;
+          btn.disabled = false;
+        }
+      }
+    }
+
+    const btnGradDirect = document.getElementById('btn-gradcam-direct');
+    if (btnGradDirect) btnGradDirect.addEventListener('click', showDirectGradCam);
+
+    const btnHdrGrad = document.getElementById('btn-header-gradcam');
+    if (btnHdrGrad) btnHdrGrad.addEventListener('click', showDirectGradCam);
+
+    // ── Reset Inference Form & Start New Scan ──
+    window.startNewLesionScan = function() {
+      switchTab('predict', true);
+
+      // 1. Reset form fields
+      const form = document.getElementById('inference-form');
+      if (form) form.reset();
+
+      // 2. Clear inputs & datalist selection
+      const elPat = document.getElementById('pred-patient-id');
+      if (elPat) elPat.value = '';
+      const elTag = document.getElementById('pred-lesion-tag');
+      if (elTag) elTag.value = '';
+      const elAge = document.getElementById('pred-age');
+      if (elAge) elAge.value = '';
+      const elDiam = document.getElementById('pred-diameter');
+      if (elDiam) elDiam.value = '';
+
+      // 3. Clear checkboxes
+      ['pred-grew', 'pred-bleed', 'pred-elevation', 'pred-history'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.checked = false;
+      });
+
+      // 4. Reset file input & dropzone image preview
+      const lesionInput = document.getElementById('lesion-file');
+      if (lesionInput) lesionInput.value = '';
+
+      const imagePreview = document.getElementById('image-preview');
+      if (imagePreview) {
+        imagePreview.src = '';
+        imagePreview.style.display = 'none';
+      }
+
+      const dropzonePrompt = document.getElementById('dropzone-prompt');
+      if (dropzonePrompt) dropzonePrompt.style.display = 'block';
+
+      // 5. Reset results panel back to placeholder
+      const resContent = document.getElementById('results-content');
+      if (resContent) resContent.style.display = 'none';
+
+      const resPlaceholder = document.getElementById('results-placeholder');
+      if (resPlaceholder) resPlaceholder.style.display = 'block';
+
+      const btnHdr = document.getElementById('btn-header-gradcam');
+      if (btnHdr) btnHdr.style.display = 'none';
+
+      // 6. Clear current analysis
+      currentAnalysis = null;
+
+      // 7. Scroll smoothly to form and notify doctor
+      const tabInf = document.getElementById('tab-predict');
+      if (tabInf) tabInf.scrollIntoView({ behavior: 'smooth' });
+
+      window.showToast('Inference form reset. Ready for new lesion scan.', 'info');
+    };
+
     const btnFbDirect = document.getElementById('btn-feedback-direct');
     if (btnFbDirect) {
       btnFbDirect.addEventListener('click', () => {
@@ -1871,11 +2016,24 @@
     async function loadPatients() {
       const searchInput = document.getElementById('search-patients');
       const search = searchInput ? searchInput.value.trim() : '';
-      const params = { page: 1, page_size: 50 };
+      const params = { page: 1, page_size: 100 };
       if (search) params.search = search;
 
       try {
         const res = await window.api.listPatients(params);
+        window._allPatientsCache = res.items || [];
+
+        // Update datalist for Smart Dropdown (Solution 2)
+        const datalist = document.getElementById('registered-patients-datalist');
+        if (datalist && res.items) {
+          datalist.innerHTML = res.items.map(p => {
+            const ageStr = p.birth_year ? `${new Date().getFullYear() - p.birth_year} yrs` : '';
+            const sexStr = p.sex ? p.sex.toUpperCase() : '';
+            const scanStr = p.analyses_count ? `${p.analyses_count} scans` : '0 scans';
+            return `<option value="${window.escapeHtml(p.patient_code)}">${window.escapeHtml(p.patient_code)} (${sexStr}${ageStr ? ', ' + ageStr : ''} • ${scanStr})</option>`;
+          }).join('');
+        }
+
         const tbody = document.getElementById('patients-tbody');
         if (!tbody) return;
 
@@ -1886,13 +2044,14 @@
 
         tbody.innerHTML = res.items.map(p => `
           <tr>
-            <td><b>${window.escapeHtml(p.patient_code)}</b></td>
-            <td>${window.escapeHtml(p.birth_year)}</td>
-            <td>${window.escapeHtml(p.sex)}</td>
+            <td><b>${window.escapeHtml(p.patient_code)}</b> <span class="badge" style="font-size: 0.68rem; padding: 0.15rem 0.4rem; background: rgba(0, 229, 255, 0.15); color: var(--teal-300);">${p.analyses_count || 0} scans</span></td>
+            <td>${window.escapeHtml(p.birth_year || 'N/A')}</td>
+            <td>${window.escapeHtml(p.sex ? p.sex.toUpperCase() : 'N/A')}</td>
             <td>${new Date(p.created_at).toLocaleDateString()}</td>
             <td>
               <div style="display: flex; gap: 4px; align-items: center;">
-                <button class="btn btn-sm btn-secondary" onclick="viewTimeline('${p.id}', '${p.patient_code}')" title="View Timeline">📊 Timeline</button>
+                <button class="btn btn-sm btn-primary" onclick="startScanForPatient('${window.escapeHtml(p.patient_code)}', ${p.birth_year || 'null'}, '${window.escapeHtml(p.sex || '')}')" title="New Scan for this Patient" style="background: var(--gradient-primary); border: none; padding: 2px 8px; font-weight: 600;">🔬 Scan</button>
+                <button class="btn btn-sm btn-secondary" onclick="viewTimeline('${p.id}', '${p.patient_code}')" title="View Timeline" style="padding: 2px 7px;">📊 Timeline</button>
                 <button class="btn btn-sm btn-secondary" title="Edit Patient" onclick="openEditPatientModal('${p.id}', '${window.escapeHtml(p.patient_code)}', ${p.birth_year}, '${window.escapeHtml(p.sex)}', '${window.escapeHtml(p.notes || '')}')" style="padding: 2px 7px;">✏️</button>
                 <button class="btn btn-sm btn-danger" title="Delete Patient" onclick="deletePatientConfirm('${p.id}', '${window.escapeHtml(p.patient_code)}')" style="padding: 2px 7px;">🗑️</button>
               </div>
@@ -1902,6 +2061,64 @@
       } catch (err) {
         console.error(err);
       }
+    }
+
+    // ── Solution 1: Direct Scan from Patient List ──
+    window.startScanForPatient = function(code, birthYear, sex) {
+      if (typeof switchTab === 'function') {
+        switchTab('predict', true);
+      } else {
+        const navInf = document.querySelector('.sidebar-item[data-tab="predict"]');
+        if (navInf) navInf.click();
+      }
+
+      const elPatient = document.getElementById('pred-patient-id');
+      if (elPatient) elPatient.value = code;
+
+      if (birthYear) {
+        const currentYear = new Date().getFullYear();
+        const calculatedAge = currentYear - birthYear;
+        const elAge = document.getElementById('pred-age');
+        if (elAge) elAge.value = calculatedAge;
+      }
+
+      if (sex) {
+        const elSex = document.getElementById('pred-sex');
+        if (elSex) {
+          const s = sex.toLowerCase();
+          elSex.value = s.startsWith('m') ? 'male' : (s.startsWith('f') ? 'female' : 'unknown');
+        }
+      }
+
+      window.showToast(`Patient ${code} selected: age and sex auto-filled!`, 'info');
+
+      const infTab = document.getElementById('tab-predict');
+      if (infTab) infTab.scrollIntoView({ behavior: 'smooth' });
+    };
+
+    // ── Solution 2: Autocomplete input listener on #pred-patient-id ──
+    const predPatientInput = document.getElementById('pred-patient-id');
+    if (predPatientInput) {
+      predPatientInput.addEventListener('input', () => {
+        const val = predPatientInput.value.trim().toLowerCase();
+        if (!val || !window._allPatientsCache) return;
+        const match = window._allPatientsCache.find(p => p.patient_code && p.patient_code.toLowerCase() === val);
+        if (match) {
+          if (match.birth_year) {
+            const calculatedAge = new Date().getFullYear() - match.birth_year;
+            const elAge = document.getElementById('pred-age');
+            if (elAge) elAge.value = calculatedAge;
+          }
+          if (match.sex) {
+            const elSex = document.getElementById('pred-sex');
+            if (elSex) {
+              const s = match.sex.toLowerCase();
+              elSex.value = s.startsWith('m') ? 'male' : (s.startsWith('f') ? 'female' : 'unknown');
+            }
+          }
+          window.showToast(`Auto-filled Age & Sex for ${match.patient_code}`, 'info');
+        }
+      });
     }
 
     const searchPatients = document.getElementById('search-patients');

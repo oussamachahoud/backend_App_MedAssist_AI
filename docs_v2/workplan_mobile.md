@@ -191,42 +191,47 @@ git push myfork feature/v2-telemedicine-expansion
 
 ## المرحلة 4: المرضى والإحالات (P1)
 
-### 4.1 وحدة المرضى
-- [ ] إنشاء: `lib/modules/patients/` (views, controllers, bindings, widgets)
-  - [ ] قائمة المرضى + بحث
-  - [ ] إنشاء ملف مريض جديد (كود مُجهّل + سنة الميلاد + الجنس)
-  - [ ] تفاصيل مريض + Lesion Timeline (مخطط خطي)
-  - [ ] ربط تحليل جديد بمريض موجود
+### 4.1 وحدة المرضى (مكتملة ومُحدّثة ✅)
+- [x] إنشاء: `lib/modules/patients/` (views, controllers, bindings, widgets)
+  - [x] قائمة المرضى + بحث + عدّاد الفحوصات الفعلي لكل مريض (`analyses_count`)
+  - [x] إنشاء ملف مريض جديد (كود مُجهّل + سنة الميلاد + الجنس)
+  - [x] تفاصيل مريض + Lesion Timeline (مخطط خطي ومخطط زمني)
+  - [x] التدفق المباشر للفحص: `Patient -> Scan Flow` وزر الفحص السريع من ملف المريض
+  - [x] الإكمال التلقائي الذكي لبيانات المريض (الكود، العمر، الجنس) في نموذج الفحص
 
-### 4.2 وحدة الإحالات
-- [ ] إنشاء: `lib/modules/referrals/` (views, controllers, bindings)
-  - [ ] GP: إنشاء إحالة + قائمة الإحالات المُرسلة
-  - [ ] Specialist: قائمة الإحالات الواردة + نموذج الرد
-  - [ ] تفاصيل إحالة
+### 4.2 وحدة الإحالات (مكتملة ✅)
+- [x] إنشاء: `lib/modules/referrals/` (views, controllers, bindings)
+  - [x] GP: إنشاء إحالة + قائمة الإحالات المُرسلة
+  - [x] Specialist: قائمة الإحالات الواردة + نموذج الرد
+  - [x] تفاصيل إحالة
 
-### 4.3 Doctor Feedback في صفحة النتائج
-- [ ] ملف: `lib/modules/result/views/result_view.dart`
-  - [ ] زر "هل توافق على التشخيص؟" → BottomSheet
-  - [ ] نعم / لا (dropdown 6 فئات)
-  - [ ] هل أُجريت خزعة؟ → نتيجة الخزعة
+### 4.3 Doctor Feedback في صفحة النتائج (مكتمل ✅)
+- [x] ملف: `lib/modules/result/views/result_view.dart`
+  - [x] زر "هل توافق على التشخيص؟" → BottomSheet
+  - [x] نعم / لا (dropdown 6 فئات)
+  - [x] هل أُجريت خزعة؟ → نتيجة الخزعة
 
 ---
 
 ## المرحلة 5: واجهة الزائر/المريض (P1-P2)
 
-### 5.1 ترجمة Education
-- [ ] ملف: `lib/modules/education/views/education_view.dart`
-  - [ ] نقل كل النصوص hardcoded إلى ملفات i18n (AR, EN, FR)
-  - [ ] إضافة صور توضيحية لكل حرف ABCDE
+### 5.1 ترجمة Education (مكتملة ✅)
+- [x] ملف: `lib/modules/education/views/education_view.dart`
+  - [x] نقل كل النصوص hardcoded إلى ملفات i18n (AR, EN, FR)
+  - [x] إضافة صور توضيحية لكل حرف ABCDE
 
-### 5.2 دليل الأطباء المعتمدين
-- [ ] إنشاء: `lib/modules/doctor_directory/` (views, controllers, bindings)
-  - [ ] يستدعي `GET /api/v1/public/doctors`
-  - [ ] فلترة بالولاية + التخصص
-  - [ ] لا يحتاج تسجيل دخول
+### 5.2 دليل الأطباء المعتمدين (مكتمل ✅)
+- [x] إنشاء: `lib/modules/doctor_directory/` (views, controllers, bindings)
+  - [x] يستدعي `GET /api/v1/public/doctors`
+  - [x] فلترة بالولاية + التخصص
+  - [x] لا يحتاج تسجيل دخول
 
-### 5.3 مسح QR للمتابعة (P2)
-- [ ] إنشاء: `lib/modules/qr_followup/` — يعرض ملخص النتيجة + تاريخ الفحص القادم
+### 5.3 مسح QR للمتابعة مع الكاميرا المدمجة (مكتمل ومُحدّث ✅)
+- [x] إنشاء: `lib/modules/qr_followup/` — يعرض ملخص النتيجة + تاريخ الفحص القادم
+  - [x] دمج ماسح الكاميرا المباشر داخل التطبيق (`mobile_scanner: ^5.2.3`)
+  - [x] استخراج الـ Token الذكي `extractToken()` من أي رابط URL (مثل `https://medassist.dz/...`) وتجاهل اسم الدومين
+  - [x] تصميم متجاوب بدون أي طفح أفقي (`Wrap` + `FittedBox` على `RiskLevelBadge`)
+  - [x] طَيّ صندوق الإدخال تلقائياً عند ظهور النتيجة لتركيز الشاشة على التقرير الطبي وموعد المتابعة
 
 ---
 
